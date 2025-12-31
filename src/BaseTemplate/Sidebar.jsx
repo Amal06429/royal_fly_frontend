@@ -200,7 +200,7 @@ const Sidebar = () => {
           </div>
           <div className="logo-text">
             <span className="logo-title">Royal Fly</span>
-            <span className="logo-subtitle">Travel Management</span>
+            {/* <span className="logo-subtitle">Travel Management</span> */}
           </div>
         </div>
 
