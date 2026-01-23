@@ -1,238 +1,106 @@
-import React, { useState } from 'react';
-import { 
-  LayoutDashboard, 
-  Plane, 
-  MessageSquare, 
-  Users, 
-  Settings,
-  LogOut
-} from 'lucide-react';
+import React from 'react'
+import { LayoutDashboard, Plane, MessageSquare, Users, Settings, LogOut } from 'lucide-react'
+import { useNavigate, useLocation } from 'react-router-dom'
 
 const Sidebar = () => {
-  const [activeItem, setActiveItem] = useState('Dashboard');
+  const navigate = useNavigate()
+  const location = useLocation()
 
-  const menuItems = [
-    { name: 'Dashboard', icon: LayoutDashboard },
-    { name: 'Flights', icon: Plane },
-    { name: 'Enquiries', icon: MessageSquare },
-    { name: 'Customers', icon: Users },
-    { name: 'Settings', icon: Settings }
-  ];
+  const menu = [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
+    { id: 'flight', label: 'Tickets', icon: Plane, path: '/flights' },
+    { id: 'enquiries', label: 'Enquiries', icon: MessageSquare, path: '/enquiries' },
+    
+  ]
+
+  const handleLogout = () => {
+    localStorage.removeItem('auth')
+    navigate('/')
+    window.location.reload()
+  }
 
   return (
-    <>
-      <style>{`
-        .sidebar-container {
-          width: 260px;
-          height: 100vh;
-          background: linear-gradient(180deg, #1e3a5f 0%, #0f1c2e 100%);
-          display: flex;
-          flex-direction: column;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-          color: white;
-          position: relative;
-        }
+    <div style={styles.sidebar}>
+      {/* LOGO */}
+      <div style={styles.logo}>Royal Fly</div>
 
-        .sidebar-header {
-          padding: 24px 20px;
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
+      {/* MENU */}
+      <div style={styles.menu}>
+        {menu.map(item => {
+          const Icon = item.icon
+          const isActive = location.pathname === item.path
 
-        .logo-icon {
-          width: 45px;
-          height: 45px;
-          background: #ff6b35;
-          border-radius: 8px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-        }
-
-        .logo-text {
-          display: flex;
-          flex-direction: column;
-        }
-
-        .logo-title {
-          font-size: 20px;
-          font-weight: 700;
-          color: white;
-          line-height: 1.2;
-        }
-
-        .logo-subtitle {
-          font-size: 12px;
-          color: rgba(255, 255, 255, 0.7);
-          font-weight: 400;
-        }
-
-        .menu-container {
-          flex: 1;
-          padding: 24px 16px;
-          overflow-y: auto;
-        }
-
-        .menu-item {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 14px 16px;
-          margin-bottom: 8px;
-          border-radius: 10px;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          font-size: 15px;
-          font-weight: 500;
-          color: rgba(255, 255, 255, 0.8);
-          border: none;
-          background: transparent;
-          width: 100%;
-          text-align: left;
-          position: relative;
-        }
-
-        .menu-item:hover {
-          background: rgba(255, 255, 255, 0.08);
-          color: white;
-        }
-
-        .menu-item.active {
-          background: #ff6b35;
-          color: white;
-          box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
-        }
-
-        .menu-item.active::after {
-          content: '›';
-          position: absolute;
-          right: 16px;
-          font-size: 20px;
-          font-weight: bold;
-        }
-
-        .menu-icon {
-          width: 20px;
-          height: 20px;
-          flex-shrink: 0;
-        }
-
-        .user-section {
-          padding: 20px;
-          border-top: 1px solid rgba(255, 255, 255, 0.1);
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-
-        .user-avatar {
-          width: 42px;
-          height: 42px;
-          border-radius: 50%;
-          background: #ff6b35;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: 700;
-          font-size: 16px;
-          flex-shrink: 0;
-        }
-
-        .user-info {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-        }
-
-        .user-name {
-          font-size: 14px;
-          font-weight: 600;
-          color: white;
-          line-height: 1.3;
-        }
-
-        .user-email {
-          font-size: 12px;
-          color: rgba(255, 255, 255, 0.6);
-        }
-
-        .logout-btn {
-          background: transparent;
-          border: none;
-          color: rgba(255, 255, 255, 0.7);
-          cursor: pointer;
-          padding: 4px;
-          display: flex;
-          align-items: center;
-          transition: color 0.2s;
-        }
-
-        .logout-btn:hover {
-          color: white;
-        }
-
-        /* Scrollbar styling */
-        .menu-container::-webkit-scrollbar {
-          width: 6px;
-        }
-
-        .menu-container::-webkit-scrollbar-track {
-          background: transparent;
-        }
-
-        .menu-container::-webkit-scrollbar-thumb {
-          background: rgba(255, 255, 255, 0.2);
-          border-radius: 3px;
-        }
-
-        .menu-container::-webkit-scrollbar-thumb:hover {
-          background: rgba(255, 255, 255, 0.3);
-        }
-      `}</style>
-
-      <div className="sidebar-container">
-        <div className="sidebar-header">
-          <div className="logo-icon">
-            <Plane size={24} strokeWidth={2.5} color="white" />
-          </div>
-          <div className="logo-text">
-            <span className="logo-title">Royal Fly</span>
-            {/* <span className="logo-subtitle">Travel Management</span> */}
-          </div>
-        </div>
-
-        <div className="menu-container">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.name}
-                className={`menu-item ${activeItem === item.name ? 'active' : ''}`}
-                onClick={() => setActiveItem(item.name)}
-              >
-                <Icon className="menu-icon" strokeWidth={2} />
-                <span>{item.name}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="user-section">
-          <div className="user-avatar">AD</div>
-          <div className="user-info">
-            <div className="user-name">Admin User</div>
-            <div className="user-email">admin@royalfly.com</div>
-          </div>
-          <button className="logout-btn" title="Logout">
-            <LogOut size={18} />
-          </button>
-        </div>
+          return (
+            <button
+              key={item.id}
+              onClick={() => navigate(item.path)}
+              style={{
+                ...styles.menuItem,
+                ...(isActive ? styles.active : {})
+              }}
+            >
+              <Icon size={18} /> {item.label}
+            </button>
+          )
+        })}
       </div>
-    </>
-  );
-};
 
-export default Sidebar;
+      {/* LOGOUT */}
+      <button onClick={handleLogout} style={styles.logout}>
+        <LogOut size={18} /> Logout
+      </button>
+    </div>
+  )
+}
+
+const styles = {
+  sidebar: {
+    width: 260,
+    height: '100vh',
+    background: '#183d68',
+    color: '#fff',
+    display: 'flex',
+    flexDirection: 'column',
+    padding: '16px',
+    boxSizing: 'border-box'
+  },
+  logo: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 20
+  },
+  menu: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 6
+  },
+  menuItem: {
+    background: 'transparent',
+    color: 'white',
+    border: 'none',
+    padding: '12px',
+    borderRadius: 8,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    fontSize: 15,
+    textAlign: 'left'
+  },
+  active: {
+    background: '#f06400'
+  },
+  logout: {
+    marginTop: 'auto',
+    background: 'transparent',
+    border: 'none',
+    color: 'white',
+    cursor: 'pointer',
+    padding: 12,
+    display: 'flex',
+    gap: 8,
+    fontSize: 15
+  }
+}
+
+export default Sidebar

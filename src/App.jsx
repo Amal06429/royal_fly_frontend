@@ -1,46 +1,67 @@
-import React, { useState } from 'react'
-import LoginPage from './pages/login'
-import {
-  Plane,
-  LayoutDashboard,
-  MessageSquare,
-  Users,
-  Settings,
-  LogOut,
-  Menu,
-  X,
-  Search,
-  Bell,
-  TrendingUp,
-  Clock
-} from 'lucide-react'
+import { Routes, Route, Navigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 
-// Main App Component
+import LoginPage from "./pages/login";
+import Dashboard from "./pages/Dashboard";
+import FlightManagement from "./components/FlightManagement";
+import Enquiries from "./components/Enquiries";
+import Layout from "./BaseTemplate/Layout";
+
+// Public
+import Home from "./Public/Home";
+import Enquire from "./Public/Enquire";
+import PublicLayout from "./Public/Publiclayout";
+
 const App = () => {
-  const [currentPage, setCurrentPage] = useState('login')
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem("access");
+    setIsAuthenticated(!!token);
+    setAuthChecked(true);
+  }, []);
 
   const handleLogin = () => {
-    setIsAuthenticated(true)
-    setCurrentPage('dashboard')
-  }
+    setIsAuthenticated(true);
+  };
 
   const handleLogout = () => {
-    setIsAuthenticated(false)
-    setCurrentPage('login')
-  }
+    localStorage.clear();
+    setIsAuthenticated(false);
+  };
 
-  if (!isAuthenticated) {
-    return <LoginPage onLogin={handleLogin} />
-  }
+  if (!authChecked) return null;
 
   return (
-    <MainLayout
-      currentPage={currentPage}
-      setCurrentPage={setCurrentPage}
-      onLogout={handleLogout}
-    />
-  )
-}
+    <Routes>
+      {/* 🌍 PUBLIC */}
+      <Route element={<PublicLayout />}>
+        <Route path="/" element={<Home />} />
+        <Route path="/enquire/:id" element={<Enquire />} />
+      </Route>
 
-export default App
+      {/* 🔓 LOGIN */}
+      <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
+
+      {/* 🔒 ADMIN */}
+      <Route
+        element={
+          isAuthenticated ? (
+            <Layout onLogout={handleLogout} />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      >
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/flights" element={<FlightManagement />} />
+        <Route path="/enquiries" element={<Enquiries />} />
+      </Route>
+
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+};
+
+export default App;
