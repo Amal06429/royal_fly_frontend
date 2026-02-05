@@ -162,7 +162,7 @@ const PublicLayout = () => {
           </Link>
 
           <a
-            href="https://wa.me/971501234567"
+            href="https://wa.me/9656905461"
             target="_blank"
             rel="noopener noreferrer"
             style={styles.whatsappBtn}
@@ -211,7 +211,7 @@ const PublicLayout = () => {
           {/* Popular Routes */}
           <div style={styles.footerSection}>
             <h3 style={styles.footerTitle}>Popular Routes</h3>
-            <span style={styles.footerText}>Dubai → London</span>
+            <span style={styles.footerText}>Dubai → calicut</span>
             <span style={styles.footerText}>Dubai → Mumbai</span>
             <span style={styles.footerText}>Dubai → Delhi</span>
             <span style={styles.footerText}>Dubai → Islamabad</span>
@@ -226,7 +226,7 @@ const PublicLayout = () => {
             <a href="mailto:royalflyccj@gmail.com" style={styles.footerLink}>
               ✉️ royalflyccj@gmail.com
             </a>
-            <span style={styles.footerText}>📍 Deira, Dubai, UAE</span>
+            <span style={styles.footerText}>📍 </span>
           </div>
         </div>
 

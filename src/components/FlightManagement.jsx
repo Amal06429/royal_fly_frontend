@@ -404,9 +404,11 @@ const FlightManagement = () => {
   const [editIndex, setEditIndex] = useState(null)
   const [search, setSearch] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
+  const [isLoaded, setIsLoaded] = useState(false)
   const itemsPerPage = 9
 
   useEffect(() => {
+    setIsLoaded(true);
     api.get("flights/")
       .then(res => setFlights(res.data))
       .catch(err => console.error(err));
@@ -496,8 +498,13 @@ const FlightManagement = () => {
   }
  
   return (
-    <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #f9fafb 0%, #e5e7eb 100%)" }}>
-      <div style={{ background: "#fff", borderBottom: "2px solid #ff8c42", padding: "24px 32px", boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
+    <>
+      <style>{`
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+      `}</style>
+      <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #f9fafb 0%, #e5e7eb 100%)" }}>
+      <div style={{ background: "#fff", borderBottom: "2px solid #ff8c42", padding: "24px 32px", boxShadow: "0 2px 8px rgba(0,0,0,0.05)", animation: isLoaded ? 'slideDown 0.6s ease-out' : 'none', animationFillMode: 'both' }}>
         <div style={{ maxWidth: "1400px", margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
             <div style={{ background: "#ff8c42", padding: "12px", borderRadius: "12px" }}>
@@ -861,6 +868,7 @@ const FlightManagement = () => {
         )}  
       </div>
     </div>
+    </>
   )
 }
 

@@ -83,6 +83,66 @@ const LoginPage = ({ onLogin }) => {
           height: 100vh !important;
           overflow: hidden !important;
         }
+        
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        
+        @keyframes slideInLeft {
+          from { 
+            opacity: 0; 
+            transform: translateX(-30px); 
+          }
+          to { 
+            opacity: 1; 
+            transform: translateX(0); 
+          }
+        }
+        
+        @keyframes slideInRight {
+          from { 
+            opacity: 0; 
+            transform: translateX(30px); 
+          }
+          to { 
+            opacity: 1; 
+            transform: translateX(0); 
+          }
+        }
+        
+        @keyframes slideUp {
+          from { 
+            opacity: 0; 
+            transform: translateY(30px); 
+          }
+          to { 
+            opacity: 1; 
+            transform: translateY(0); 
+          }
+        }
+        
+        @keyframes scaleIn {
+          from { 
+            opacity: 0; 
+            transform: scale(0.95); 
+          }
+          to { 
+            opacity: 1; 
+            transform: scale(1); 
+          }
+        }
+        
+        .login-button:hover {
+          background: #1e3a8a !important;
+          transform: translateY(-2px);
+          box-shadow: 0 8px 16px rgba(30, 58, 138, 0.3);
+        }
+        
+        .input-box:focus-within {
+          border-color: #1e40af !important;
+          background: white !important;
+        }
       `}</style>
       <div style={styles.container}>
         <div style={styles.left}>
@@ -119,7 +179,7 @@ const LoginPage = ({ onLogin }) => {
             </p>
 
             <label style={styles.label}>Email address</label>
-            <div style={styles.inputBox}>
+            <div className="input-box" style={styles.inputBox}>
               <Mail size={20} color="#94a3b8" />
               <input
                 placeholder="amal@gmail.com"
@@ -131,7 +191,7 @@ const LoginPage = ({ onLogin }) => {
             </div>
 
             <label style={styles.label}>Password</label>
-            <div style={styles.inputBox}>
+            <div className="input-box" style={styles.inputBox}>
               <Lock size={20} color="#94a3b8" />
               <input
                 type="password"
@@ -143,7 +203,7 @@ const LoginPage = ({ onLogin }) => {
               />
             </div>
 
-            <button style={styles.button} onClick={handleLogin}>
+            <button className="login-button" style={styles.button} onClick={handleLogin}>
               Sign in
             </button>
           </div>
@@ -181,7 +241,9 @@ const styles = {
   brand: {
     display: 'flex',
     alignItems: 'center',
-    gap: 16
+    gap: 16,
+    animation: 'slideInLeft 0.6s ease-out',
+    animationFillMode: 'both'
   },
   logoIcon: {
     background: '#f97316',
@@ -201,7 +263,10 @@ const styles = {
     fontSize: 48,
     marginTop: 80,
     lineHeight: 1.2,
-    fontWeight: 'bold'
+    fontWeight: 'bold',
+    animation: 'slideInLeft 0.8s ease-out',
+    animationDelay: '0.2s',
+    animationFillMode: 'both'
   },
   highlight: {
     color: '#fb923c'
@@ -211,11 +276,17 @@ const styles = {
     marginTop: 24,
     lineHeight: 1.7,
     fontSize: 16,
-    opacity: 0.95
+    opacity: 0.95,
+    animation: 'slideInLeft 0.8s ease-out',
+    animationDelay: '0.4s',
+    animationFillMode: 'both'
   },
   footer: {
     fontSize: 14,
-    opacity: 0.8
+    opacity: 0.8,
+    animation: 'fadeIn 1s ease-out',
+    animationDelay: '0.6s',
+    animationFillMode: 'both'
   },
   right: {
     flex: 1,
@@ -227,7 +298,10 @@ const styles = {
   },
   loginBox: {
     width: 440,
-    padding: 20
+    padding: 20,
+    animation: 'scaleIn 0.8s ease-out',
+    animationDelay: '0.3s',
+    animationFillMode: 'both'
   },
   label: {
     fontSize: 15,
@@ -244,7 +318,8 @@ const styles = {
     padding: '14px 16px',
     borderRadius: 10,
     marginBottom: 20,
-    background: '#f1f5f9'
+    background: '#f1f5f9',
+    transition: 'all 0.3s ease'
   },
   input: {
     border: 'none',
@@ -264,7 +339,7 @@ const styles = {
     fontWeight: 600,
     cursor: 'pointer',
     fontSize: 16,
-    transition: 'all 0.2s'
+    transition: 'all 0.3s ease'
   }
 }
 

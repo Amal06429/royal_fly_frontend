@@ -15,8 +15,10 @@ const Sidebar = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('auth')
-    navigate('/')
-    window.location.reload()
+    localStorage.removeItem('access')
+    localStorage.removeItem('refresh')
+    localStorage.removeItem('user')
+    navigate('/login')
   }
 
   return (

@@ -19,10 +19,12 @@ const Enquiries = () => {
     additionalNotes: ""
   });
   const [currentPage, setCurrentPage] = useState(1);
+  const [isLoaded, setIsLoaded] = useState(false);
   const itemsPerPage = 10;
 
   // Fetch enquiries
   useEffect(() => {
+    setIsLoaded(true);
     api.get("enquiries/")
       .then(res => {
         setEnquiries(res.data);
@@ -84,6 +86,7 @@ const Enquiries = () => {
   const handleAddPricing = (enquiry) => {
     setCurrentEnquiry(enquiry);
     setShowPricingModal(true);
+    setSelectedEnquiries([]); // Clear selected enquiries when opening from action button
     setPricingDetails({
       ticketPrice: "",
       airline: "",
@@ -92,86 +95,140 @@ const Enquiries = () => {
     });
   };
 
-  // Send WhatsApp message
-  const sendWhatsAppMessage = () => {
-    if (!currentEnquiry || !pricingDetails.ticketPrice) {
-      alert("Please fill in the ticket price");
-      return;
-    }
-
-    const message = `Hello ${currentEnquiry.name}! 👋
-
-Thank you for your flight enquiry.
-
-✈️ *Flight Details:*
-━━━━━━━━━━━━━━━━
-📍 Route: ${currentEnquiry.from_city} → ${currentEnquiry.to_city}
-
-${pricingDetails.airline ? `🛫 Airline: ${pricingDetails.airline}` : ''}
-${pricingDetails.travelDate ? `📅 Travel Date: ${pricingDetails.travelDate}` : ''}
-💰 Ticket Price: ₹${pricingDetails.ticketPrice}
-
-${pricingDetails.additionalNotes ? `📝 *Additional Information:*
-${pricingDetails.additionalNotes}` : ''}
-
-For booking or queries, please feel free to contact us.
-
-Best Regards,
-Travel Agency Team`;
-
-    const encodedMessage = encodeURIComponent(message);
-    const phoneNumber = currentEnquiry.phone.replace(/[^0-9]/g, '');
-    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
-    
-    window.open(whatsappUrl, '_blank');
-    setShowPricingModal(false);
-    setCurrentEnquiry(null);
-  };
-
-  // Send bulk WhatsApp to selected enquiries
-  const sendBulkWhatsApp = () => {
+  // Send WhatsApp to selected enquiries
+  const handleSendBulkWhatsApp = () => {
     if (selectedEnquiries.length === 0) {
-      alert("Please select at least one enquiry");
+      alert("Please select at least one enquiry to send WhatsApp message");
       return;
     }
 
-    selectedEnquiries.forEach(id => {
-      const enquiry = enquiries.find(e => e.id === id);
-      if (enquiry) {
-        const message = `Hello ${enquiry.name}! 👋
-Thank you for your flight enquiry for ${enquiry.from_city} → ${enquiry.to_city}.
-
-We have exciting flight options available for your travel dates. Please let us know your preferences!
-
-Best Regards,
-Travel Agency Team`;
-        
-        const encodedMessage = encodeURIComponent(message);
-        const phoneNumber = enquiry.phone.replace(/[^0-9]/g, '');
-        const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
-        window.open(whatsappUrl, '_blank');
-      }
-    });
+    // Get the first selected enquiry to open the modal
+    const firstSelected = enquiries.find(e => selectedEnquiries.includes(e.id));
+    if (firstSelected) {
+      setCurrentEnquiry(firstSelected);
+      setShowPricingModal(true);
+      setPricingDetails({
+        ticketPrice: "",
+        airline: "",
+        travelDate: firstSelected.date || "",
+        additionalNotes: ""
+      });
+    }
   };
+
+  // Send WhatsApp message via API
+  const handleSendWhatsApp = async () => {
+    if (!pricingDetails.ticketPrice) {
+      alert("Please enter ticket price");
+      return;
+    }
+
+    // Get all selected enquiries or just the current one
+    const enquiriesToSend = selectedEnquiries.length > 0 
+      ? enquiries.filter(e => selectedEnquiries.includes(e.id))
+      : [currentEnquiry];
+
+    try {
+      // Send WhatsApp message to all selected enquiries
+      const promises = enquiriesToSend.map(enquiry => {
+        const payload = {
+          customer_name: enquiry.name,
+          phone: enquiry.phone,
+          from_city: enquiry.from_city?.toUpperCase(),
+          to_city: enquiry.to_city?.toUpperCase(),
+          ticket_price: pricingDetails.ticketPrice,
+          airline: pricingDetails.airline || "N/A",
+          travel_date: pricingDetails.travelDate || "N/A",
+          notes: pricingDetails.additionalNotes || "N/A"
+        };
+        return api.post("whatsapp/send-ticket/", payload);
+      });
+
+      const results = await Promise.all(promises);
+      
+      const successCount = results.filter(r => r.data.success).length;
+      const failCount = results.length - successCount;
+
+      if (failCount === 0) {
+        alert(`WhatsApp messages sent successfully to ${successCount} customer(s)! ✅`);
+      } else {
+        alert(`Sent to ${successCount} customer(s), Failed: ${failCount} ❌`);
+      }
+      
+      setShowPricingModal(false);
+      setSelectedEnquiries([]);
+    } catch (error) {
+      console.error("WhatsApp send error:", error);
+      alert("Error sending WhatsApp message. Please try again.");
+    }
+  };
+
+  // Delete selected enquiries
+  const handleDeleteSelected = async () => {
+    if (selectedEnquiries.length === 0) {
+      alert("Please select at least one enquiry to delete");
+      return;
+    }
+
+    if (!window.confirm(`Are you sure you want to delete ${selectedEnquiries.length} enquiry/enquiries?`)) {
+      return;
+    }
+
+    try {
+      // Delete each selected enquiry
+      await Promise.all(
+        selectedEnquiries.map(id => api.delete(`enquiries/${id}/`))
+      );
+      
+      // Update the state to remove deleted enquiries
+      setEnquiries(prev => prev.filter(e => !selectedEnquiries.includes(e.id)));
+      setSelectedEnquiries([]);
+      alert("Enquiries deleted successfully ✅");
+    } catch (error) {
+      console.error(error);
+      alert("Failed to delete enquiries ❌");
+    }
+  };
+
+  
 
   return (
-    <div style={styles.container}>
-      <div style={styles.headingWrapper}>
+    <>
+      <style>{`
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+      `}</style>
+      <div style={{...styles.container, animation: isLoaded ? 'fadeIn 0.6s ease-out' : 'none', animationFillMode: 'both'}}>
+      <div style={{...styles.headingWrapper, animation: isLoaded ? 'slideDown 0.6s ease-out' : 'none', animationDelay: '0.1s', animationFillMode: 'both'}}>
         <div style={styles.iconBox}>
           <svg style={styles.icon} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M21 16V14L13 9V3.5C13 2.67 12.33 2 11.5 2C10.67 2 10 2.67 10 3.5V9L2 14V16L10 13.5V19L8 20.5V22L11.5 21L15 22V20.5L13 19V13.5L21 16Z" fill="white"/>
           </svg>
         </div>
         <h2 style={styles.heading}>Enquiry List</h2>
-        {selectedEnquiries.length > 0 && (
-          <button onClick={sendBulkWhatsApp} style={styles.bulkWhatsappBtn}>
-            📱 Send WhatsApp to {selectedEnquiries.length} Selected
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button 
+            onClick={handleSendBulkWhatsApp}
+            style={{
+              ...styles.deleteBtn,
+              background: selectedEnquiries.length === 0 ? '#94a3b8' : '#25D366'
+            }}
+            disabled={selectedEnquiries.length === 0}
+          >
+            📱 Send WhatsApp ({selectedEnquiries.length})
           </button>
-        )}
+          <button 
+            onClick={handleDeleteSelected}
+            style={styles.deleteBtn}
+            disabled={selectedEnquiries.length === 0}
+          >
+            🗑️ Delete Selected ({selectedEnquiries.length})
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
-      <div style={styles.filterRow}>
+      <div style={{...styles.filterRow, animation: isLoaded ? 'slideDown 0.6s ease-out' : 'none', animationDelay: '0.2s', animationFillMode: 'both'}}>
         <input
           type="text"
           placeholder="Search name / email / phone"
@@ -280,7 +337,7 @@ Travel Agency Team`;
                   <td style={styles.td}>{item.phone}</td>
                   <td style={styles.td}>{item.email}</td>
                   <td style={styles.td}>
-                    {item.from_city} → {item.to_city}
+                    {item.from_city?.toUpperCase()} → {item.to_city?.toUpperCase()}
                   </td>
                   <td style={styles.td}>{item.message}</td>
                   <td style={styles.td}>
@@ -356,7 +413,9 @@ Travel Agency Team`;
         <div style={styles.modalOverlay}>
           <div style={styles.modal}>
             <div style={styles.modalHeader}>
-              <h3 style={styles.modalTitle}>Message Popup</h3>
+              <h3 style={styles.modalTitle}>
+                Message Popup {selectedEnquiries.length > 1 ? `(${selectedEnquiries.length} selected)` : ''}
+              </h3>
               <button 
                 onClick={() => setShowPricingModal(false)}
                 style={styles.closeBtn}
@@ -366,13 +425,22 @@ Travel Agency Team`;
             </div>
 
             <div style={styles.modalBody}>
-              <div style={styles.enquiryInfo}>
-                <p><strong>Customer:</strong> {currentEnquiry.name}</p>
-                <p>
-                  <strong>Route:</strong>{" "}
-                  {currentEnquiry.from_city} → {currentEnquiry.to_city}
-                </p>
-              </div>
+              {selectedEnquiries.length > 1 ? (
+                <div style={styles.enquiryInfo}>
+                  <p><strong>Sending to {selectedEnquiries.length} customers</strong></p>
+                  <p style={{ fontSize: '13px', color: '#6b7280', marginTop: '8px' }}>
+                    Same pricing details will be sent to all selected enquiries
+                  </p>
+                </div>
+              ) : (
+                <div style={styles.enquiryInfo}>
+                  <p><strong>Customer:</strong> {currentEnquiry.name}</p>
+                  <p>
+                    <strong>Route:</strong>{" "}
+                    {currentEnquiry.from_city?.toUpperCase()} → {currentEnquiry.to_city?.toUpperCase()}
+                  </p>
+                </div>
+              )}
 
               <div style={styles.formGroup}>
                 <label style={styles.label}>Ticket Price (₹) *</label>
@@ -414,21 +482,55 @@ Travel Agency Team`;
                 />
               </div>
 
-              <button 
-                onClick={sendWhatsAppMessage}
-                style={styles.whatsappBtn}
-              >
-                📱 Send via WhatsApp
-              </button>
+              <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                <button
+                  onClick={handleSendWhatsApp}
+                  style={{
+                    flex: 1,
+                    padding: '12px 20px',
+                    background: '#25D366',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.background = '#20BA5A'}
+                  onMouseOut={(e) => e.currentTarget.style.background = '#25D366'}
+                >
+                  📱 Send via WhatsApp
+                </button>
+                <button
+                  onClick={() => setShowPricingModal(false)}
+                  style={{
+                    padding: '12px 20px',
+                    background: '#e5e7eb',
+                    color: '#374151',
+                    border: 'none',
+                    borderRadius: '6px',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                    cursor: 'pointer'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.background = '#d1d5db'}
+                  onMouseOut={(e) => e.currentTarget.style.background = '#e5e7eb'}
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
     </div>
+    </>
   );
 };
-
-export default Enquiries;
 
 /* Styles */
 const styles = {
@@ -465,16 +567,17 @@ const styles = {
     fontWeight: "600",
     color: "#2c3e50",
   },
-  bulkWhatsappBtn: {
+  deleteBtn: {
     padding: "10px 20px",
     borderRadius: "8px",
     border: "none",
-    background: "#25D366",
+    background: "#EF4444",
     color: "#ffffff",
     cursor: "pointer",
     fontSize: "14px",
     fontWeight: "600",
     marginLeft: "auto",
+    transition: "all 0.2s",
   },
   filterRow: {
     display: "flex",
@@ -644,18 +747,6 @@ const styles = {
     fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
     boxSizing: "border-box",
   },
-  whatsappBtn: {
-    width: "100%",
-    padding: "12px",
-    borderRadius: "8px",
-    border: "none",
-    background: "#25D366",
-    color: "#ffffff",
-    cursor: "pointer",
-    fontSize: "16px",
-    fontWeight: "600",
-    marginTop: "10px",
-  },
   paginationContainer: {
     display: "flex",
     justifyContent: "center",
@@ -717,3 +808,5 @@ if (typeof document !== 'undefined') {
   `;
   document.head.appendChild(style);
 }
+
+export default Enquiries;

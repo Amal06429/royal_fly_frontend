@@ -6,6 +6,7 @@ const Home = () => {
   const [tripType, setTripType] = useState("One Way")
   const [fromSearch, setFromSearch] = useState("")
   const [toSearch, setToSearch] = useState("")
+  const [isLoaded, setIsLoaded] = useState(false)
   const [dateSearch, setDateSearch] = useState("")
   const [returnDate, setReturnDate] = useState("")
   const [passengers, setPassengers] = useState("1 Adult, Economy / Premium")
@@ -25,6 +26,7 @@ const Home = () => {
 
   // Fetch flights from Django API instead of localStorage
   useEffect(() => {
+    setIsLoaded(true)
     const fetchFlights = async () => {
       try {
         const response = await fetch('http://localhost:8000/api/flights/')
@@ -132,6 +134,22 @@ const Home = () => {
   }
 
   const styles = {
+    '@keyframes fadeIn': {
+      from: { opacity: 0 },
+      to: { opacity: 1 }
+    },
+    '@keyframes slideDown': {
+      from: { opacity: 0, transform: 'translateY(-30px)' },
+      to: { opacity: 1, transform: 'translateY(0)' }
+    },
+    '@keyframes slideUp': {
+      from: { opacity: 0, transform: 'translateY(30px)' },
+      to: { opacity: 1, transform: 'translateY(0)' }
+    },
+    '@keyframes scaleIn': {
+      from: { opacity: 0, transform: 'scale(0.9)' },
+      to: { opacity: 1, transform: 'scale(1)' }
+    },
     container: {
       width: '100%',
       minHeight: '100vh',
@@ -142,6 +160,7 @@ const Home = () => {
       textAlign: 'center',
       padding: '60px 20px 40px',
       color: 'white',
+      animation: isLoaded ? 'fadeIn 0.8s ease-out' : 'none',
     },
     badge: {
       display: 'inline-block',
@@ -152,6 +171,9 @@ const Home = () => {
       fontSize: '13px',
       marginBottom: '30px',
       backdropFilter: 'blur(10px)',
+      animation: isLoaded ? 'slideDown 0.6s ease-out' : 'none',
+      animationDelay: '0.2s',
+      animationFillMode: 'both',
     },
     mainTitle: {
       fontSize: '48px',
@@ -159,6 +181,9 @@ const Home = () => {
       lineHeight: '1.2',
       marginBottom: '20px',
       color: 'white',
+      animation: isLoaded ? 'slideDown 0.8s ease-out' : 'none',
+      animationDelay: '0.4s',
+      animationFillMode: 'both',
     },
     highlight: {
       color: '#ff8c42',
@@ -175,6 +200,9 @@ const Home = () => {
       boxShadow: '0 10px 40px rgba(0, 0, 0, 0.15)',
       maxWidth: '1200px',
       width: '100%',
+      animation: isLoaded ? 'slideUp 0.8s ease-out' : 'none',
+      animationDelay: '0.6s',
+      animationFillMode: 'both',
     },
     searchRow: {
       display: 'flex',
@@ -245,6 +273,9 @@ const Home = () => {
       background: '#f5f7fa',
       padding: '60px 20px',
       minHeight: '400px',
+      animation: isLoaded ? 'fadeIn 1s ease-out' : 'none',
+      animationDelay: '0.8s',
+      animationFillMode: 'both',
     },
     sectionTitle: {
       textAlign: 'center',
@@ -252,6 +283,9 @@ const Home = () => {
       color: '#1e3a5f',
       marginBottom: '40px',
       fontWeight: '700',
+      animation: isLoaded ? 'slideDown 0.8s ease-out' : 'none',
+      animationDelay: '1s',
+      animationFillMode: 'both',
     },
     flightsGrid: {
       maxWidth: '1200px',
@@ -388,6 +422,7 @@ const Home = () => {
       alignItems: 'center',
       zIndex: 1000,
       padding: '20px',
+      animation: 'fadeIn 0.3s ease-out',
     },
     modalCard: {
       background: 'white',
@@ -398,6 +433,7 @@ const Home = () => {
       width: '100%',
       maxHeight: '90vh',
       overflowY: 'auto',
+      animation: 'scaleIn 0.3s ease-out',
     },
     modalTitle: {
       fontSize: '22px',
@@ -496,9 +532,59 @@ const Home = () => {
   }
 
   return (
-    <div style={styles.container}>
-      {/* Hero Section */}
-      <div style={styles.heroSection}>
+    <>
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        
+        @keyframes slideDown {
+          from { 
+            opacity: 0; 
+            transform: translateY(-30px); 
+          }
+          to { 
+            opacity: 1; 
+            transform: translateY(0); 
+          }
+        }
+        
+        @keyframes slideUp {
+          from { 
+            opacity: 0; 
+            transform: translateY(30px); 
+          }
+          to { 
+            opacity: 1; 
+            transform: translateY(0); 
+          }
+        }
+        
+        @keyframes scaleIn {
+          from { 
+            opacity: 0; 
+            transform: scale(0.9); 
+          }
+          to { 
+            opacity: 1; 
+            transform: scale(1); 
+          }
+        }
+        
+        @keyframes pulse {
+          0%, 100% { 
+            transform: scale(1); 
+          }
+          50% { 
+            transform: scale(1.05); 
+          }
+        }
+      `}</style>
+      
+      <div style={styles.container}>
+        {/* Hero Section */}
+        <div style={styles.heroSection}>
         <div style={styles.badge}>✈️ Best Tickets Enquiry</div>
         
         <h1 style={styles.mainTitle}>
@@ -598,16 +684,21 @@ const Home = () => {
         <h2 style={styles.sectionTitle}>Available Flights</h2>
 
         <div style={styles.flightsGrid}>
-          {filteredFlights.map((f) => (
+          {filteredFlights.map((f, index) => (
             <div 
               key={f.id}
-              style={styles.flightCard}
+              style={{
+                ...styles.flightCard,
+                animation: isLoaded ? 'slideUp 0.6s ease-out' : 'none',
+                animationDelay: `${1.2 + index * 0.1}s`,
+                animationFillMode: 'both',
+              }}
               onMouseOver={(e) => {
-                e.currentTarget.style.transform = 'translateY(-4px)'
-                e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.12)'
+                e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)'
+                e.currentTarget.style.boxShadow = '0 12px 32px rgba(0, 0, 0, 0.15)'
               }}
               onMouseOut={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)'
+                e.currentTarget.style.transform = 'translateY(0) scale(1)'
                 e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.08)'
               }}
             >
@@ -760,7 +851,8 @@ const Home = () => {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   )
 }
 

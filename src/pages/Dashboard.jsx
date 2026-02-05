@@ -117,11 +117,11 @@ const Dashboard = () => {
               <td style={styles.tableCell}>
                 <div style={styles.routeCell}>
                   <span style={styles.location}>
-                    {e.from_city || "N/A"}
+                    {e.from_city ? e.from_city.toUpperCase() : "N/A"}
                   </span>
                   <span style={styles.arrow}>→</span>
                   <span style={styles.location}>
-                    {e.to_city || "N/A"}
+                    {e.to_city ? e.to_city.toUpperCase() : "N/A"}
                   </span>
                 </div>
               </td>
