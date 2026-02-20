@@ -332,7 +332,7 @@ const Enquiries = () => {
                   </td>
                   <td style={styles.td}>{item.name}</td>
                   <td style={styles.td}>
-                    {item.created_at?.split("T")[0]}
+                    {item.created_at ? new Date(item.created_at).toLocaleDateString('en-GB') : 'N/A'}
                   </td>
                   <td style={styles.td}>{item.phone}</td>
                   <td style={styles.td}>{item.email}</td>
@@ -454,7 +454,7 @@ const Enquiries = () => {
 
               <div style={styles.formGroup}>
                 <label style={styles.label}>Airline</label>
-                <input
+                 <input
                   type="text"
                   value={pricingDetails.airline}
                   onChange={(e) => setPricingDetails({...pricingDetails, airline: e.target.value})}
