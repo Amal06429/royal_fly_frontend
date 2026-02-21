@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Plane, Mail, Lock } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import axios from 'axios'
+import api from '../services/api'
 
 // ❌ DEMO PASSWORD REMOVED (kept variable name unused to avoid breaking anything)
 const DEMO_PASSWORD = 'demo123'
@@ -21,16 +21,11 @@ const LoginPage = ({ onLogin }) => {
     }
 
     try {
-      const response = await axios.post(
-        'https://royalfly.imcbs.com/api/login/',
+      const response = await api.post(
+        'login/',
         {
           email: enteredEmail,
           password: enteredPassword
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json'
-          }
         }
       )
 

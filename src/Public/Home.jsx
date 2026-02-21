@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import api from "../services/api"
 
 const Home = () => {
   const [flights, setFlights] = useState([])
@@ -29,10 +30,9 @@ const Home = () => {
     setIsLoaded(true)
     const fetchFlights = async () => {
       try {
-        const response = await fetch('https://royalfly.imcbs.com/api/flights/')
-        const data = await response.json()
-        setFlights(data)
-        setFilteredFlights(data)
+        const response = await api.get('flights/')
+        setFlights(response.data)
+        setFilteredFlights(response.data)
       } catch (error) {
         console.error('Error fetching flights:', error)
         // Fallback to localStorage if API fails
@@ -109,24 +109,10 @@ const Home = () => {
     }
 
     try {
-      const response = await fetch(
-  'http://localhost:8000/api/enquiries/create/',
- {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(enquiry)
-      })
-
-      if (response.ok) {
-        alert("Enquiry sent successfully!")
-        setShowEnquireForm(false)
-        setSelectedFlight(null)
-      } else {
-        const error = await response.json()
-        alert("Error: " + (error.message || "Failed to submit enquiry"))
-      }
+      await api.post('enquiries/create/', enquiry)
+      alert("Enquiry sent successfully!")
+      setShowEnquireForm(false)
+      setSelectedFlight(null)
     } catch (error) {
       console.error('Error submitting enquiry:', error)
       alert("Error submitting enquiry. Please try again.")

@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom"
 import { useState, useEffect } from "react"
+import api from "../services/api"
 
 const Enquire = () => {
   const { id } = useParams()
@@ -31,27 +32,13 @@ const Enquire = () => {
 
 
     try {
-      const response = await fetch('https://royalfly.imcbs.com/api/enquiries/create/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(enquiry)
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        console.log('Success:', data)
-        alert("Enquiry sent successfully")
-        navigate("/")
-      } else {
-        const error = await response.json()
-        console.error('Error:', error)
-        alert(`Failed to submit enquiry: ${JSON.stringify(error)}`)
-      }
+      const response = await api.post('enquiries/create/', enquiry)
+      console.log('Success:', response.data)
+      alert("Enquiry sent successfully")
+      navigate("/")
     } catch (error) {
-      console.error('Network error:', error)
-      alert("Network error. Please check if the backend is running.")
+      console.error('Error:', error.response?.data || error)
+      alert(`Failed to submit enquiry: ${JSON.stringify(error.response?.data || error.message)}`)
     }
   }
 
