@@ -3,7 +3,7 @@ import { Plane, Mail, Lock } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
 
-// ❌ DEMO PASSWORD REMOVED (kept variable name unused to avoid breaking anything)
+// demo constant kept (unused)
 const DEMO_PASSWORD = 'demo123'
 
 const LoginPage = ({ onLogin }) => {
@@ -11,7 +11,10 @@ const LoginPage = ({ onLogin }) => {
   const [password, setPassword] = useState('')
   const navigate = useNavigate()
 
-  const handleLogin = async () => {
+  // ✅ FIXED: form submit handler
+  const handleLogin = async (e) => {
+    e.preventDefault() // 🔥 PREVENTS GET /api/login
+
     const enteredEmail = email.trim().toLowerCase()
     const enteredPassword = password.trim()
 
@@ -21,17 +24,14 @@ const LoginPage = ({ onLogin }) => {
     }
 
     try {
-      const response = await api.post(
-        'login/',
-        {
-          email: enteredEmail,
-          password: enteredPassword
-        }
-      )
+      const response = await api.post('login/', {
+        email: enteredEmail,
+        password: enteredPassword
+      })
 
       const data = response.data
 
-      // ✅ STORE JWT TOKENS
+      // store tokens
       localStorage.setItem('access', data.access)
       localStorage.setItem('refresh', data.refresh)
 
@@ -44,22 +44,14 @@ const LoginPage = ({ onLogin }) => {
         })
       )
 
-      // keep existing app auth flow
       onLogin({ email: enteredEmail, role: 'user' })
       navigate('/dashboard')
-
     } catch (error) {
       if (error.response) {
         alert(error.response.data.error || 'Invalid credentials')
       } else {
         alert('Backend server not reachable')
       }
-    }
-  }
-
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      handleLogin()
     }
   }
 
@@ -72,82 +64,22 @@ const LoginPage = ({ onLogin }) => {
           box-sizing: border-box;
         }
         body, html, #root {
-          margin: 0 !important;
-          padding: 0 !important;
-          width: 100vw !important;
-          height: 100vh !important;
-          overflow: hidden !important;
-        }
-        
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        
-        @keyframes slideInLeft {
-          from { 
-            opacity: 0; 
-            transform: translateX(-30px); 
-          }
-          to { 
-            opacity: 1; 
-            transform: translateX(0); 
-          }
-        }
-        
-        @keyframes slideInRight {
-          from { 
-            opacity: 0; 
-            transform: translateX(30px); 
-          }
-          to { 
-            opacity: 1; 
-            transform: translateX(0); 
-          }
-        }
-        
-        @keyframes slideUp {
-          from { 
-            opacity: 0; 
-            transform: translateY(30px); 
-          }
-          to { 
-            opacity: 1; 
-            transform: translateY(0); 
-          }
-        }
-        
-        @keyframes scaleIn {
-          from { 
-            opacity: 0; 
-            transform: scale(0.95); 
-          }
-          to { 
-            opacity: 1; 
-            transform: scale(1); 
-          }
-        }
-        
-        .login-button:hover {
-          background: #1e3a8a !important;
-          transform: translateY(-2px);
-          box-shadow: 0 8px 16px rgba(30, 58, 138, 0.3);
-        }
-        
-        .input-box:focus-within {
-          border-color: #1e40af !important;
-          background: white !important;
+          width: 100vw;
+          height: 100vh;
+          overflow: hidden;
         }
       `}</style>
+
       <div style={styles.container}>
+        {/* LEFT PANEL */}
         <div style={styles.left}>
           <div>
             <div style={styles.brand}>
               <div style={styles.logoIcon}>
-                <Plane size={28} style={{ color: 'white' }} />
+                <Plane size={28} color="white" />
               </div>
               <div>
-                <h3 style={{ margin: 0, fontSize: 24, fontWeight: 'bold' }}>Royal Fly Travels</h3>
+                <h3 style={{ margin: 0, fontSize: 24 }}>Royal Fly Travels</h3>
                 <p style={styles.subTitle}>Travel Management</p>
               </div>
             </div>
@@ -159,48 +91,48 @@ const LoginPage = ({ onLogin }) => {
             </h1>
 
             <p style={styles.desc}>
-              Track flights, manage customer enquiries, and stay connected with automated WhatsApp notifications—all in one powerful platform.
+              Track flights, manage enquiries, and send automated WhatsApp
+              notifications from one platform.
             </p>
           </div>
 
-          <p style={styles.footer}>© 2024 Royal Fly Travels. All rights reserved.</p>
+          <p style={styles.footer}>© 2024 Royal Fly Travels</p>
         </div>
 
+        {/* RIGHT PANEL */}
         <div style={styles.right}>
           <div style={styles.loginBox}>
-            <h2 style={{ marginBottom: 6, fontSize: 32, fontWeight: 'bold', color: '#1e293b' }}>Welcome back</h2>
-            <p style={{ marginBottom: 32, color: '#64748b', fontSize: 16 }}>
-              Sign in to your account to continue
-            </p>
+            <h2 style={styles.title}>Welcome back</h2>
+            <p style={styles.subtitle}>Sign in to continue</p>
 
-            <label style={styles.label}>Email address</label>
-            <div className="input-box" style={styles.inputBox}>
-              <Mail size={20} color="#94a3b8" />
-              <input
-                placeholder="amal@gmail.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                onKeyPress={handleKeyPress}
-                style={styles.input}
-              />
-            </div>
+            {/* ✅ FIXED FORM */}
+            <form onSubmit={handleLogin}>
+              <label style={styles.label}>Email</label>
+              <div style={styles.inputBox}>
+                <Mail size={20} />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  style={styles.input}
+                />
+              </div>
 
-            <label style={styles.label}>Password</label>
-            <div className="input-box" style={styles.inputBox}>
-              <Lock size={20} color="#94a3b8" />
-              <input
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                onKeyPress={handleKeyPress}
-                style={styles.input}
-              />
-            </div>
+              <label style={styles.label}>Password</label>
+              <div style={styles.inputBox}>
+                <Lock size={20} />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  style={styles.input}
+                />
+              </div>
 
-            <button className="login-button" style={styles.button} onClick={handleLogin}>
-              Sign in
-            </button>
+              <button type="submit" style={styles.button}>
+                Sign in
+              </button>
+            </form>
           </div>
         </div>
       </div>
@@ -210,131 +142,94 @@ const LoginPage = ({ onLogin }) => {
 
 const styles = {
   container: {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
     display: 'flex',
     width: '100vw',
     height: '100vh',
-    fontFamily: 'system-ui, -apple-system, sans-serif',
-    margin: 0,
-    padding: 0,
-    overflow: 'hidden'
+    fontFamily: 'system-ui'
   },
   left: {
     flex: 1,
-    background: 'linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%)',
+    background: 'linear-gradient(135deg, #1e40af, #1e3a8a)',
     color: 'white',
-    padding: '60px',
+    padding: 60,
     display: 'flex',
     flexDirection: 'column',
-    justifyContent: 'space-between',
-    overflowY: 'auto'
+    justifyContent: 'space-between'
   },
   brand: {
     display: 'flex',
     alignItems: 'center',
-    gap: 16,
-    animation: 'slideInLeft 0.6s ease-out',
-    animationFillMode: 'both'
+    gap: 16
   },
   logoIcon: {
     background: '#f97316',
     padding: 16,
-    borderRadius: 12,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center'
+    borderRadius: 12
   },
   subTitle: {
-    margin: 0,
     fontSize: 14,
-    opacity: 0.9,
-    fontWeight: 400
+    opacity: 0.9
   },
   heading: {
-    fontSize: 48,
-    marginTop: 80,
-    lineHeight: 1.2,
-    fontWeight: 'bold',
-    animation: 'slideInLeft 0.8s ease-out',
-    animationDelay: '0.2s',
-    animationFillMode: 'both'
+    fontSize: 42,
+    marginTop: 80
   },
   highlight: {
     color: '#fb923c'
   },
   desc: {
-    maxWidth: 480,
-    marginTop: 24,
-    lineHeight: 1.7,
-    fontSize: 16,
-    opacity: 0.95,
-    animation: 'slideInLeft 0.8s ease-out',
-    animationDelay: '0.4s',
-    animationFillMode: 'both'
+    marginTop: 20,
+    maxWidth: 480
   },
   footer: {
-    fontSize: 14,
-    opacity: 0.8,
-    animation: 'fadeIn 1s ease-out',
-    animationDelay: '0.6s',
-    animationFillMode: 'both'
+    opacity: 0.8
   },
   right: {
     flex: 1,
+    background: '#f8fafc',
     display: 'flex',
     justifyContent: 'center',
-    alignItems: 'center',
-    background: '#f8fafc',
-    overflowY: 'auto'
+    alignItems: 'center'
   },
   loginBox: {
-    width: 440,
-    padding: 20,
-    animation: 'scaleIn 0.8s ease-out',
-    animationDelay: '0.3s',
-    animationFillMode: 'both'
+    width: 420
+  },
+  title: {
+    fontSize: 32,
+    marginBottom: 8
+  },
+  subtitle: {
+    marginBottom: 30,
+    color: '#64748b'
   },
   label: {
-    fontSize: 15,
-    marginBottom: 10,
-    display: 'block',
-    color: '#1e293b',
-    fontWeight: 600
+    fontWeight: 600,
+    marginBottom: 6,
+    display: 'block'
   },
   inputBox: {
     display: 'flex',
-    alignItems: 'center',
     gap: 12,
+    alignItems: 'center',
     border: '2px solid #e2e8f0',
-    padding: '14px 16px',
+    padding: 12,
     borderRadius: 10,
-    marginBottom: 20,
-    background: '#f1f5f9',
-    transition: 'all 0.3s ease'
+    marginBottom: 20
   },
   input: {
     border: 'none',
     outline: 'none',
-    background: 'transparent',
-    flex: 1,
-    fontSize: 15,
-    color: '#1e293b'
+    flex: 1
   },
   button: {
     width: '100%',
-    padding: 16,
+    padding: 14,
     background: '#1e3a8a',
     color: 'white',
     border: 'none',
     borderRadius: 10,
     fontWeight: 600,
-    cursor: 'pointer',
-    fontSize: 16,
-    transition: 'all 0.3s ease'
+    cursor: 'pointer'
   }
 }
 
