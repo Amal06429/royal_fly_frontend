@@ -29,7 +29,7 @@ const Home = () => {
     setIsLoaded(true)
     const fetchFlights = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/flights/')
+        const response = await fetch('https://royalfly.imcbs.com/api/flights/')
         const data = await response.json()
         setFlights(data)
         setFilteredFlights(data)
