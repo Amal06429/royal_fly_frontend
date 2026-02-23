@@ -24,7 +24,7 @@ const LoginPage = ({ onLogin }) => {
     }
 
     try {
-      const response = await api.post('login', {
+      const response = await api.post('login/', {
         email: enteredEmail,
         password: enteredPassword
       })
