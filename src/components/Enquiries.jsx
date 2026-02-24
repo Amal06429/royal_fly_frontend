@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import api from "../services/api";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import AdminEnquiryForm from "./AdminEnquiryForm";
 
 const Enquiries = () => {
   const [enquiries, setEnquiries] = useState([]);
@@ -11,6 +12,8 @@ const Enquiries = () => {
   const [toFilter, setToFilter] = useState("");
   const [selectedEnquiries, setSelectedEnquiries] = useState([]);
   const [showPricingModal, setShowPricingModal] = useState(false);
+  const [showAdminEnquiryForm, setShowAdminEnquiryForm] = useState(false);
+  const [enquiryTypeFilter, setEnquiryTypeFilter] = useState("all"); // all, customer, admin
   const [currentEnquiry, setCurrentEnquiry] = useState(null);
   const [pricingDetails, setPricingDetails] = useState({
     ticketPrice: "",
@@ -23,8 +26,7 @@ const Enquiries = () => {
   const itemsPerPage = 10;
 
   // Fetch enquiries
-  useEffect(() => {
-    setIsLoaded(true);
+  const fetchEnquiries = () => {
     api.get("enquiries/")
       .then(res => {
         setEnquiries(res.data);
@@ -32,6 +34,11 @@ const Enquiries = () => {
       .catch(err => {
         console.error("Failed to load enquiries", err);
       });
+  };
+
+  useEffect(() => {
+    setIsLoaded(true);
+    fetchEnquiries();
   }, []);
 
   // Get unique from and to locations
@@ -42,17 +49,23 @@ const Enquiries = () => {
   const filteredEnquiries = enquiries.filter((item) => {
     const matchesSearch =
       item.name.toLowerCase().includes(search.toLowerCase()) ||
-      item.email.toLowerCase().includes(search.toLowerCase()) ||
+      (item.email && item.email.toLowerCase().includes(search.toLowerCase())) ||
       item.phone.includes(search);
 
-    const enquiryDate = new Date(item.date);
+    const enquiryDate = new Date(item.created_at || item.date);
     const isAfterFrom = fromDate ? enquiryDate >= new Date(fromDate) : true;
     const isBeforeTo = toDate ? enquiryDate <= new Date(toDate) : true;
     
     const matchesFromFilter = fromFilter ? item.from_city === fromFilter : true;
     const matchesToFilter = toFilter ? item.to_city === toFilter : true;
+    
+    // Filter by enquiry type
+    const matchesEnquiryType = 
+      enquiryTypeFilter === "all" ? true :
+      enquiryTypeFilter === "customer" ? item.created_by === "customer" :
+      enquiryTypeFilter === "admin" ? item.created_by === "admin" : true;
 
-    return matchesSearch && isAfterFrom && isBeforeTo && matchesFromFilter && matchesToFilter;
+    return matchesSearch && isAfterFrom && isBeforeTo && matchesFromFilter && matchesToFilter && matchesEnquiryType;
   });
 
   // Pagination logic
@@ -208,6 +221,12 @@ const Enquiries = () => {
         <h2 style={styles.heading}>Enquiry List</h2>
         <div style={{ display: 'flex', gap: '10px' }}>
           <button 
+            onClick={() => setShowAdminEnquiryForm(true)}
+            style={styles.createEnquiryBtn}
+          >
+            ➕ Create Enquiry
+          </button>
+          <button 
             onClick={handleSendBulkWhatsApp}
             style={{
               ...styles.deleteBtn,
@@ -225,6 +244,46 @@ const Enquiries = () => {
             🗑️ Delete Selected ({selectedEnquiries.length})
           </button>
         </div>
+      </div>
+
+      {/* Enquiry Type Tabs */}
+      <div style={styles.tabsContainer}>
+        <button
+          onClick={() => {
+            setEnquiryTypeFilter("all");
+            setCurrentPage(1);
+          }}
+          style={{
+            ...styles.tab,
+            ...(enquiryTypeFilter === "all" ? styles.activeTab : {})
+          }}
+        >
+          All Enquiries ({enquiries.length})
+        </button>
+        <button
+          onClick={() => {
+            setEnquiryTypeFilter("customer");
+            setCurrentPage(1);
+          }}
+          style={{
+            ...styles.tab,
+            ...(enquiryTypeFilter === "customer" ? styles.activeTab : {})
+          }}
+        >
+          👤 Customer ({enquiries.filter(e => e.created_by === "customer").length})
+        </button>
+        <button
+          onClick={() => {
+            setEnquiryTypeFilter("admin");
+            setCurrentPage(1);
+          }}
+          style={{
+            ...styles.tab,
+            ...(enquiryTypeFilter === "admin" ? styles.activeTab : {})
+          }}
+        >
+          👨‍💼 Admin Created ({enquiries.filter(e => e.created_by === "admin").length})
+        </button>
       </div>
 
       {/* Filters */}
@@ -330,9 +389,16 @@ const Enquiries = () => {
                       style={styles.checkbox}
                     />
                   </td>
-                  <td style={styles.td}>{item.name}</td>
                   <td style={styles.td}>
-                    {item.created_at?.split("T")[0]}
+                    {item.name}
+                    {item.created_by === "admin" && (
+                      <span style={{ marginLeft: '8px' }}>
+                        <span style={styles.adminBadge}>ADMIN</span>
+                      </span>
+                    )}
+                  </td>
+                  <td style={styles.td}>
+                    {item.created_at ? new Date(item.created_at).toLocaleDateString('en-GB') : 'N/A'}
                   </td>
                   <td style={styles.td}>{item.phone}</td>
                   <td style={styles.td}>{item.email}</td>
@@ -454,7 +520,7 @@ const Enquiries = () => {
 
               <div style={styles.formGroup}>
                 <label style={styles.label}>Airline</label>
-                <input
+                 <input
                   type="text"
                   value={pricingDetails.airline}
                   onChange={(e) => setPricingDetails({...pricingDetails, airline: e.target.value})}
@@ -526,6 +592,17 @@ const Enquiries = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Admin Enquiry Form Modal */}
+      {showAdminEnquiryForm && (
+        <AdminEnquiryForm 
+          onClose={() => setShowAdminEnquiryForm(false)}
+          onSuccess={() => {
+            fetchEnquiries();
+            setShowAdminEnquiryForm(false);
+          }}
+        />
       )}
     </div>
     </>
@@ -786,7 +863,51 @@ const styles = {
     marginLeft: "16px",
     fontSize: "14px",
     color: "#6b7280",
-  }
+  },
+  createEnquiryBtn: {
+    padding: "10px 20px",
+    borderRadius: "8px",
+    border: "none",
+    background: "#ff8c42",
+    color: "#ffffff",
+    cursor: "pointer",
+    fontSize: "14px",
+    fontWeight: "600",
+    transition: "all 0.2s",
+  },
+  tabsContainer: {
+    display: "flex",
+    gap: "10px",
+    marginBottom: "20px",
+    borderBottom: "2px solid #e5e7eb",
+    paddingBottom: "0",
+  },
+  tab: {
+    padding: "12px 24px",
+    border: "none",
+    background: "transparent",
+    color: "#6b7280",
+    cursor: "pointer",
+    fontSize: "14px",
+    fontWeight: "500",
+    borderBottom: "3px solid transparent",
+    transition: "all 0.2s",
+    marginBottom: "-2px",
+  },
+  activeTab: {
+    color: "#ff8c42",
+    borderBottom: "3px solid #ff8c42",
+    fontWeight: "600",
+  },
+  adminBadge: {
+    background: "#ff8c42",
+    color: "white",
+    padding: "2px 8px",
+    borderRadius: "12px",
+    fontSize: "10px",
+    fontWeight: "600",
+    textTransform: "uppercase",
+  },
 };
 
 if (typeof document !== 'undefined') {

@@ -1,10 +1,11 @@
-import React from 'react'
-import { LayoutDashboard, Plane, MessageSquare, Users, Settings, LogOut } from 'lucide-react'
+import React, { useState } from 'react'
+import { LayoutDashboard, Plane, MessageSquare, Users, Settings, LogOut, Menu, X } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 
 const Sidebar = () => {
   const navigate = useNavigate()
   const location = useLocation()
+  const [isOpen, setIsOpen] = useState(false)
 
   const menu = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
@@ -21,8 +22,59 @@ const Sidebar = () => {
     navigate('/login')
   }
 
+  const handleMenuClick = (path) => {
+    navigate(path)
+    setIsOpen(false) // Close mobile menu after navigation
+  }
+
   return (
-    <div style={styles.sidebar}>
+    <>
+      <style>{`
+        @media (max-width: 768px) {
+          .sidebar-container {
+            position: fixed !important;
+            left: ${isOpen ? '0' : '-100%'} !important;
+            width: 260px !important;
+            z-index: 1000 !important;
+            transition: left 0.3s ease !important;
+          }
+          .sidebar-overlay {
+            display: ${isOpen ? 'block' : 'none'} !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            background: rgba(0,0,0,0.5) !important;
+            z-index: 999 !important;
+          }
+          .hamburger-btn {
+            display: flex !important;
+          }
+        }
+        @media (min-width: 769px) {
+          .hamburger-btn {
+            display: none !important;
+          }
+          .sidebar-overlay {
+            display: none !important;
+          }
+        }
+      `}</style>
+
+      {/* Overlay for mobile */}
+      <div className="sidebar-overlay" onClick={() => setIsOpen(false)}></div>
+
+      {/* Hamburger Button - Only visible on mobile */}
+      <button 
+        className="hamburger-btn"
+        onClick={() => setIsOpen(!isOpen)}
+        style={styles.hamburger}
+      >
+        {isOpen ? <X size={24} /> : <Menu size={24} />}
+      </button>
+
+      <div style={styles.sidebar} className="sidebar-container">
       {/* LOGO */}
       <div style={styles.logo}>Royal Fly</div>
 
@@ -35,7 +87,7 @@ const Sidebar = () => {
           return (
             <button
               key={item.id}
-              onClick={() => navigate(item.path)}
+              onClick={() => handleMenuClick(item.path)}
               style={{
                 ...styles.menuItem,
                 ...(isActive ? styles.active : {})
@@ -52,10 +104,26 @@ const Sidebar = () => {
         <LogOut size={18} /> Logout
       </button>
     </div>
+    </>
   )
 }
 
 const styles = {
+  hamburger: {
+    position: 'fixed',
+    top: 16,
+    left: 16,
+    zIndex: 1001,
+    background: '#183d68',
+    color: 'white',
+    border: 'none',
+    padding: 12,
+    borderRadius: 8,
+    cursor: 'pointer',
+    display: 'none', // Shown via media query
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
   sidebar: {
     width: 260,
     height: '100vh',
