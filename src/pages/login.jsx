@@ -96,7 +96,7 @@ const LoginPage = ({ onLogin }) => {
             </p>
           </div>
 
-          <p style={styles.footer}>© 2024 Royal Fly Travels</p>
+          <p style={styles.footer}>© 2026 Royal Fly Travels</p>
         </div>
 
         {/* RIGHT PANEL */}

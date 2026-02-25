@@ -366,7 +366,7 @@ const Enquiries = () => {
               <th style={styles.th}>Phone</th>
               <th style={styles.th}>Email</th>
               <th style={styles.th}>From → To</th>
-              <th style={styles.th}>Message</th>
+              <th style={styles.th}>Message/Notes</th>
               <th style={styles.th}>Action</th>
             </tr>
           </thead>
