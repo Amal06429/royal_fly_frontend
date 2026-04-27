@@ -3,17 +3,13 @@ import { Plane, Mail, Lock } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
 
-// demo constant kept (unused)
-const DEMO_PASSWORD = 'demo123'
-
 const LoginPage = ({ onLogin }) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const navigate = useNavigate()
 
-  // ✅ FIXED: form submit handler
   const handleLogin = async (e) => {
-    e.preventDefault() // 🔥 PREVENTS GET /api/login
+    e.preventDefault()
 
     const enteredEmail = email.trim().toLowerCase()
     const enteredPassword = password.trim()
@@ -31,11 +27,9 @@ const LoginPage = ({ onLogin }) => {
 
       const data = response.data
 
-      // store tokens
       localStorage.setItem('access', data.access)
       localStorage.setItem('refresh', data.refresh)
 
-      // optional user info
       localStorage.setItem(
         'user',
         JSON.stringify({
@@ -96,7 +90,11 @@ const LoginPage = ({ onLogin }) => {
             </p>
           </div>
 
-          <p style={styles.footer}>© 2026 Royal Fly Travels</p>
+          {/* ✅ CENTERED FOOTER */}
+          <div style={styles.footerContainer}>
+            <p style={styles.footer}>© 2026 Royal Fly Travels</p>
+            <p style={styles.powered}>Powered by IMC Business Solution</p>
+          </div>
         </div>
 
         {/* RIGHT PANEL */}
@@ -105,7 +103,6 @@ const LoginPage = ({ onLogin }) => {
             <h2 style={styles.title}>Welcome back</h2>
             <p style={styles.subtitle}>Sign in to continue</p>
 
-            {/* ✅ FIXED FORM */}
             <form onSubmit={handleLogin}>
               <label style={styles.label}>Email</label>
               <div style={styles.inputBox}>
@@ -147,6 +144,7 @@ const styles = {
     height: '100vh',
     fontFamily: 'system-ui'
   },
+
   left: {
     flex: 1,
     background: 'linear-gradient(135deg, #1e40af, #1e3a8a)',
@@ -156,34 +154,55 @@ const styles = {
     flexDirection: 'column',
     justifyContent: 'space-between'
   },
+
   brand: {
     display: 'flex',
     alignItems: 'center',
     gap: 16
   },
+
   logoIcon: {
     background: '#f97316',
     padding: 16,
     borderRadius: 12
   },
+
   subTitle: {
     fontSize: 14,
     opacity: 0.9
   },
+
   heading: {
     fontSize: 42,
     marginTop: 80
   },
+
   highlight: {
     color: '#fb923c'
   },
+
   desc: {
     marginTop: 20,
     maxWidth: 480
   },
-  footer: {
-    opacity: 0.8
+
+  /* ✅ NEW CENTER STYLE */
+  footerContainer: {
+    textAlign: 'center'
   },
+
+  footer: {
+    opacity: 0.8,
+    fontSize: 14
+  },
+
+  powered: {
+    fontSize: 12,
+    opacity: 0.7,
+    marginTop: 4,
+    letterSpacing: 0.5
+  },
+
   right: {
     flex: 1,
     background: '#f8fafc',
@@ -191,22 +210,27 @@ const styles = {
     justifyContent: 'center',
     alignItems: 'center'
   },
+
   loginBox: {
     width: 420
   },
+
   title: {
     fontSize: 32,
     marginBottom: 8
   },
+
   subtitle: {
     marginBottom: 30,
     color: '#64748b'
   },
+
   label: {
     fontWeight: 600,
     marginBottom: 6,
     display: 'block'
   },
+
   inputBox: {
     display: 'flex',
     gap: 12,
@@ -216,11 +240,13 @@ const styles = {
     borderRadius: 10,
     marginBottom: 20
   },
+
   input: {
     border: 'none',
     outline: 'none',
     flex: 1
   },
+
   button: {
     width: '100%',
     padding: 14,

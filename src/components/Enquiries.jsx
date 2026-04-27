@@ -405,7 +405,9 @@ const Enquiries = () => {
                   <td style={styles.td}>
                     {item.from_city?.toUpperCase()} → {item.to_city?.toUpperCase()}
                   </td>
-                  <td style={styles.td}>{item.message}</td>
+                  <td style={{...styles.td, maxWidth: '250px', wordWrap: 'break-word', whiteSpace: 'normal', fontSize: '13px'}}>
+                    {item.message || item.notes || 'N/A'}
+                  </td>
                   <td style={styles.td}>
                     <button 
                       onClick={() => handleAddPricing(item)}

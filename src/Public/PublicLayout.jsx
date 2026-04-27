@@ -83,6 +83,21 @@ const PublicLayout = () => {
       cursor: "pointer",
       textDecoration: "none",
     },
+    loginBtn: {
+      background: "#1e3a5f",
+      color: "white",
+      padding: "10px 20px",
+      borderRadius: "8px",
+      border: "2px solid #ff8c42",
+      display: "flex",
+      alignItems: "center",
+      gap: "8px",
+      fontSize: "14px",
+      fontWeight: "600",
+      cursor: "pointer",
+      textDecoration: "none",
+      transition: "all 0.3s",
+    },
     enquiryBtn: {
       background: "#ff8c42",
       color: "white",
@@ -156,7 +171,7 @@ const PublicLayout = () => {
 
       {/* Header */}
       <header style={styles.header}>
-        <Link to="/" style={styles.logo}>
+        <Link to="/login" style={styles.logo}>
           <img
             src="/logo.png"
             alt="Royal Fly Travels"
@@ -174,6 +189,21 @@ const PublicLayout = () => {
             onMouseOut={(e) => (e.currentTarget.style.color = "#333")}
           >
             Home
+          </Link>
+
+          <Link
+            to="/login"
+            style={styles.loginBtn}
+            onMouseOver={(e) => {
+              e.currentTarget.style.background = "#ff8c42"
+              e.currentTarget.style.borderColor = "#ff8c42"
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.background = "#1e3a5f"
+              e.currentTarget.style.borderColor = "#ff8c42"
+            }}
+          >
+             Login
           </Link>
 
           <a
@@ -241,7 +271,7 @@ const PublicLayout = () => {
             <a href="mailto:royalflyccj@gmail.com" style={styles.footerLink}>
               ✉️ royalflyccj@gmail.com
             </a>
-            <span style={styles.footerText}>📍 </span>
+            {/* <span style={styles.footerText}>📍 </span> */}
           </div>
         </div>
 

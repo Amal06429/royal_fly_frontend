@@ -18,12 +18,20 @@ const Home = () => {
   const [travelClass, setTravelClass] = useState("Economy / Premium Economy")
   const [selectedFlight, setSelectedFlight] = useState(null)
   const [showEnquireForm, setShowEnquireForm] = useState(false)
+  const [showNoFlightsEnquiry, setShowNoFlightsEnquiry] = useState(false)
 
   // Form fields for enquiry
   const [name, setName] = useState("")
   const [phone, setPhone] = useState("")
   const [email, setEmail] = useState("")
   const [message, setMessage] = useState("")
+  
+  // Form fields for no-flights enquiry
+  const [noFlightsForm, setNoFlightsForm] = useState({
+    name: "",
+    phone: "",
+    message: ""
+  })
 
   // Fetch flights from Django API instead of localStorage
   useEffect(() => {
@@ -94,6 +102,48 @@ const Home = () => {
     setPhone("")
     setEmail("")
     setMessage("")
+  }
+
+  const handleNoFlightsEnquiry = () => {
+    setShowNoFlightsEnquiry(true)
+    setNoFlightsForm({
+      name: "",
+      phone: "",
+      message: ""
+    })
+  }
+
+  const handleNoFlightsSubmit = async (e) => {
+    e.preventDefault()
+
+    if (!noFlightsForm.name || !noFlightsForm.phone || !fromSearch || !toSearch) {
+      alert("Please fill in all required fields")
+      return
+    }
+
+    const enquiry = {
+      name: noFlightsForm.name,
+      phone: noFlightsForm.phone,
+      from_city: fromSearch,
+      to_city: toSearch,
+      travel_date: dateSearch,
+      message: noFlightsForm.message,
+      notes: noFlightsForm.message
+    }
+
+    try {
+      await api.post('enquiries/create/', enquiry)
+      alert("✅ Enquiry submitted successfully! We'll get back to you soon.")
+      setShowNoFlightsEnquiry(false)
+      setNoFlightsForm({
+        name: "",
+        phone: "",
+        message: ""
+      })
+    } catch (error) {
+      console.error('Error submitting enquiry:', error)
+      alert("❌ Error submitting enquiry. Please try again.")
+    }
   }
 
   const handleEnquireSubmit = async (e) => {
@@ -395,6 +445,45 @@ const Home = () => {
       padding: '60px 20px',
       color: '#666',
       fontSize: '18px',
+    },
+    noFlightsContainer: {
+      gridColumn: '1 / -1',
+      display: 'flex',
+      justifyContent: 'center',
+      padding: '60px 20px',
+    },
+    noFlightsBox: {
+      background: 'linear-gradient(135deg, #fff5f0 0%, #ffe8e0 100%)',
+      border: '2px dashed #ff8c42',
+      borderRadius: '16px',
+      padding: '40px',
+      maxWidth: '500px',
+      textAlign: 'center',
+      boxShadow: '0 4px 15px rgba(255, 140, 66, 0.1)',
+    },
+    noFlightsTitle: {
+      fontSize: '24px',
+      fontWeight: '700',
+      color: '#1e3a5f',
+      marginBottom: '12px',
+    },
+    noFlightsText: {
+      fontSize: '15px',
+      color: '#666',
+      marginBottom: '24px',
+      lineHeight: '1.5',
+    },
+    noFlightsButton: {
+      background: 'linear-gradient(135deg, #ff8c42 0%, #ff6b35 100%)',
+      color: 'white',
+      padding: '14px 32px',
+      border: 'none',
+      borderRadius: '8px',
+      fontSize: '16px',
+      fontWeight: '600',
+      cursor: 'pointer',
+      transition: 'all 0.3s ease',
+      display: 'inline-block',
     },
     modal: {
       position: 'fixed',
@@ -749,8 +838,39 @@ const Home = () => {
           ))}
 
           {filteredFlights.length === 0 && (
-            <div style={styles.noResults}>
-              No flights found. Try adjusting your search criteria.
+            <div style={styles.noFlightsContainer}>
+              <div style={styles.noFlightsBox}>
+                <div style={styles.noFlightsTitle}> No Flights Available</div>
+                <div style={styles.noFlightsText}>
+                  We couldn't find any flights for your search criteria. But don't worry! We can help you find the perfect flight.
+                </div>
+                <div style={{marginBottom: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255, 140, 66, 0.3)'}}>
+                  <p style={{fontSize: '13px', color: '#666', margin: '0 0 12px 0'}}>
+                    <strong>Route:</strong> {fromSearch} → {toSearch}
+                  </p>
+                  {dateSearch && (
+                    <p style={{fontSize: '13px', color: '#666', margin: '0 0 12px 0'}}>
+                      <strong>Date:</strong> {dateSearch}
+                    </p>
+                  )}
+                </div>
+                <button 
+                  style={styles.noFlightsButton}
+                  onClick={handleNoFlightsEnquiry}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.background = 'linear-gradient(135deg, #ff7a28 0%, #ff5a1f 100%)'
+                    e.currentTarget.style.transform = 'translateY(-2px)'
+                    e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 107, 53, 0.3)'
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.background = 'linear-gradient(135deg, #ff8c42 0%, #ff6b35 100%)'
+                    e.currentTarget.style.transform = 'translateY(0)'
+                    e.currentTarget.style.boxShadow = 'none'
+                  }}
+                >
+                  📋 Enquire for This Route
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -829,6 +949,113 @@ const Home = () => {
                   type="button" 
                   style={styles.cancelBtn}
                   onClick={() => setShowEnquireForm(false)}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* No Flights Enquiry Modal */}
+      {showNoFlightsEnquiry && (
+        <div style={styles.modal} onClick={() => setShowNoFlightsEnquiry(false)}>
+          <div style={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+            <h2 style={styles.modalTitle}>✉️ Flight Enquiry</h2>
+            
+            <div style={styles.modalFlightRoute}>
+              <span style={styles.modalAirportCode}>{fromSearch || '—'}</span>
+              <span style={styles.modalArrow}>→</span>
+              <span style={styles.modalAirportCode}>{toSearch || '—'}</span>
+            </div>
+
+            <form onSubmit={handleNoFlightsSubmit} style={styles.form}>
+              <div style={styles.formGroup}>
+                <label style={styles.formLabel} htmlFor="nf_name">Full Name *</label>
+                <input 
+                  id="nf_name"
+                  type="text"
+                  placeholder="Enter your name" 
+                  value={noFlightsForm.name}
+                  onChange={e => setNoFlightsForm({...noFlightsForm, name: e.target.value})}
+                  style={styles.formInput}
+                  required
+                />
+              </div>
+
+              <div style={styles.formGroup}>
+                <label style={styles.formLabel} htmlFor="nf_phone">Phone Number *</label>
+                <input 
+                  id="nf_phone"
+                  type="tel"
+                  placeholder="Enter your phone number" 
+                  value={noFlightsForm.phone}
+                  onChange={e => setNoFlightsForm({...noFlightsForm, phone: e.target.value})}
+                  style={styles.formInput}
+                  required
+                />
+              </div>
+
+              <div style={styles.formGroup}>
+                <label style={styles.formLabel} htmlFor="nf_from">From *</label>
+                <input 
+                  id="nf_from"
+                  type="text"
+                  placeholder="Departure city/code" 
+                  value={fromSearch}
+                  onChange={e => setFromSearch(e.target.value)}
+                  style={{...styles.formInput, background: '#f0f0f0', cursor: 'not-allowed'}}
+                  disabled
+                />
+              </div>
+
+              <div style={styles.formGroup}>
+                <label style={styles.formLabel} htmlFor="nf_to">To *</label>
+                <input 
+                  id="nf_to"
+                  type="text"
+                  placeholder="Destination city/code" 
+                  value={toSearch}
+                  onChange={e => setToSearch(e.target.value)}
+                  style={{...styles.formInput, background: '#f0f0f0', cursor: 'not-allowed'}}
+                  disabled
+                />
+              </div>
+
+              {dateSearch && (
+                <div style={styles.formGroup}>
+                  <label style={styles.formLabel} htmlFor="nf_date">Travel Date</label>
+                  <input 
+                    id="nf_date"
+                    type="date"
+                    value={dateSearch}
+                    style={{...styles.formInput, background: '#f0f0f0', cursor: 'not-allowed'}}
+                    disabled
+                  />
+                </div>
+              )}
+
+              <div style={styles.formGroup}>
+                <label style={styles.formLabel} htmlFor="nf_message">Message / Details</label>
+                <textarea 
+                  id="nf_message"
+                  placeholder="Tell us any specific preferences or requirements" 
+                  value={noFlightsForm.message}
+                  onChange={e => setNoFlightsForm({...noFlightsForm, message: e.target.value})}
+                  rows="4"
+                  style={styles.textarea}
+                />
+              </div>
+
+              <div style={{display: 'flex', gap: '10px'}}>
+                <button type="submit" style={styles.submitBtn}>
+                  Submit Enquiry
+                </button>
+                <button 
+                  type="button" 
+                  style={styles.cancelBtn}
+                  onClick={() => setShowNoFlightsEnquiry(false)}
                 >
                   Cancel
                 </button>
