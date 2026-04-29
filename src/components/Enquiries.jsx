@@ -10,6 +10,7 @@ const Enquiries = () => {
   const [toDate, setToDate] = useState("");
   const [fromFilter, setFromFilter] = useState("");
   const [toFilter, setToFilter] = useState("");
+  const [createdByFilter, setCreatedByFilter] = useState(""); // New: filter by creator
   const [selectedEnquiries, setSelectedEnquiries] = useState([]);
   const [showPricingModal, setShowPricingModal] = useState(false);
   const [showAdminEnquiryForm, setShowAdminEnquiryForm] = useState(false);
@@ -44,6 +45,8 @@ const Enquiries = () => {
   // Get unique from and to locations
   const uniqueFromLocations = [...new Set(enquiries.map(e => e.from_city))];
   const uniqueToLocations = [...new Set(enquiries.map(e => e.to_city))];
+  // Get unique creators
+  const uniqueCreators = [...new Set(enquiries.map(e => e.username || 'Guest').filter(Boolean))];
 
   // Filters
   const filteredEnquiries = enquiries.filter((item) => {
@@ -59,13 +62,18 @@ const Enquiries = () => {
     const matchesFromFilter = fromFilter ? item.from_city === fromFilter : true;
     const matchesToFilter = toFilter ? item.to_city === toFilter : true;
     
+    // Filter by created by (creator name)
+    const matchesCreatedByFilter = createdByFilter 
+      ? (item.username || 'Guest') === createdByFilter 
+      : true;
+    
     // Filter by enquiry type
     const matchesEnquiryType = 
       enquiryTypeFilter === "all" ? true :
       enquiryTypeFilter === "customer" ? item.created_by === "customer" :
       enquiryTypeFilter === "admin" ? item.created_by === "admin" : true;
 
-    return matchesSearch && isAfterFrom && isBeforeTo && matchesFromFilter && matchesToFilter && matchesEnquiryType;
+    return matchesSearch && isAfterFrom && isBeforeTo && matchesFromFilter && matchesToFilter && matchesCreatedByFilter && matchesEnquiryType;
   });
 
   // Pagination logic
@@ -346,6 +354,20 @@ const Enquiries = () => {
           }}
           style={styles.dateInput}
         />
+
+        <select
+          value={createdByFilter}
+          onChange={(e) => {
+            setCreatedByFilter(e.target.value);
+            setCurrentPage(1);
+          }}
+          style={styles.select}
+        >
+          <option value="">All Creators</option>
+          {uniqueCreators.map(creator => (
+            <option key={creator} value={creator}>{creator}</option>
+          ))}
+        </select>
       </div>
 
       {/* Table */}
