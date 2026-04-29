@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Plane, Mail, Lock } from 'lucide-react'
+import { Plane } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
 
@@ -106,26 +106,22 @@ const LoginPage = ({ onLogin }) => {
 
             <form onSubmit={handleLogin}>
               <label style={styles.label}>Email</label>
-              <div style={styles.inputBox}>
-                <Mail size={20} />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  style={styles.input}
-                />
-              </div>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
+                style={styles.inputField}
+              />
 
               <label style={styles.label}>Password</label>
-              <div style={styles.inputBox}>
-                <Lock size={20} />
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  style={styles.input}
-                />
-              </div>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                style={styles.inputField}
+              />
 
               <button type="submit" style={styles.button}>
                 Sign in
@@ -232,20 +228,16 @@ const styles = {
     display: 'block'
   },
 
-  inputBox: {
-    display: 'flex',
-    gap: 12,
-    alignItems: 'center',
+  inputField: {
+    width: '100%',
     border: '2px solid #e2e8f0',
-    padding: 12,
+    padding: '12px 16px',
     borderRadius: 10,
-    marginBottom: 20
-  },
-
-  input: {
-    border: 'none',
+    marginBottom: 20,
+    fontSize: 14,
     outline: 'none',
-    flex: 1
+    transition: 'border-color 0.3s',
+    fontFamily: 'system-ui'
   },
 
   button: {
