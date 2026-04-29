@@ -650,7 +650,18 @@ const FlightManagement = () => {
                         {flight.flightType}
                       </span>
                     </div>
-                    <div style={{ display: "flex", gap: "10px" }}>
+                    <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                      <span style={{
+                        background: flight.createdBy === "admin" ? "#10b981" : "#3b82f6",
+                        color: "#fff",
+                        padding: "4px 10px",
+                        borderRadius: "6px",
+                        fontSize: "11px",
+                        fontWeight: "600",
+                        textTransform: "capitalize"
+                      }}>
+                        {flight.creatorUsername || flight.createdBy || "unknown"}
+                      </span>
                       <Edit
                         size={18}
                         style={{ cursor: "pointer", color: "#6b7280", transition: "color 0.2s" }}

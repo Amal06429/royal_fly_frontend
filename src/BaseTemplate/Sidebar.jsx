@@ -7,11 +7,15 @@ const Sidebar = () => {
   const location = useLocation()
   const [isOpen, setIsOpen] = useState(false)
 
+  // Get user data from localStorage
+  const user = JSON.parse(localStorage.getItem('user') || '{}')
+  const isAdmin = user.is_admin || false
+
   const menu = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
     { id: 'flight', label: 'Tickets', icon: Plane, path: '/flights' },
     { id: 'enquiries', label: 'Enquiries', icon: MessageSquare, path: '/enquiries' },
-    
+    ...(isAdmin ? [{ id: 'users', label: 'Users', icon: Users, path: '/users' }] : []),
   ]
 
   const handleLogout = () => {

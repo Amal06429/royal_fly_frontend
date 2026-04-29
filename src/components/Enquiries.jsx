@@ -367,6 +367,7 @@ const Enquiries = () => {
               <th style={styles.th}>Email</th>
               <th style={styles.th}>From → To</th>
               <th style={styles.th}>Message/Notes</th>
+              <th style={styles.th}>Created By</th>
               <th style={styles.th}>Action</th>
             </tr>
           </thead>
@@ -374,7 +375,7 @@ const Enquiries = () => {
           <tbody>
             {paginatedEnquiries.length === 0 ? (
               <tr>
-                <td colSpan="8" style={styles.noData}>
+                <td colSpan="9" style={styles.noData}>
                   No enquiries found
                 </td>
               </tr>
@@ -391,11 +392,6 @@ const Enquiries = () => {
                   </td>
                   <td style={styles.td}>
                     {item.name}
-                    {item.created_by === "admin" && (
-                      <span style={{ marginLeft: '8px' }}>
-                        <span style={styles.adminBadge}>ADMIN</span>
-                      </span>
-                    )}
                   </td>
                   <td style={styles.td}>
                     {item.created_at ? new Date(item.created_at).toLocaleDateString('en-GB') : 'N/A'}
@@ -407,6 +403,9 @@ const Enquiries = () => {
                   </td>
                   <td style={{...styles.td, maxWidth: '250px', wordWrap: 'break-word', whiteSpace: 'normal', fontSize: '13px'}}>
                     {item.message || item.notes || 'N/A'}
+                  </td>
+                  <td style={styles.td}>
+                    {item.username || 'Guest'}
                   </td>
                   <td style={styles.td}>
                     <button 
@@ -900,15 +899,6 @@ const styles = {
     color: "#ff8c42",
     borderBottom: "3px solid #ff8c42",
     fontWeight: "600",
-  },
-  adminBadge: {
-    background: "#ff8c42",
-    color: "white",
-    padding: "2px 8px",
-    borderRadius: "12px",
-    fontSize: "10px",
-    fontWeight: "600",
-    textTransform: "uppercase",
   },
 };
 

@@ -34,11 +34,12 @@ const LoginPage = ({ onLogin }) => {
         'user',
         JSON.stringify({
           email: data.email,
-          username: data.username
+          username: data.username,
+          is_admin: data.is_admin
         })
       )
 
-      onLogin({ email: enteredEmail, role: 'user' })
+      onLogin({ email: enteredEmail, is_admin: data.is_admin })
       navigate('/dashboard')
     } catch (error) {
       if (error.response) {

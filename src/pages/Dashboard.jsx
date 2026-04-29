@@ -97,6 +97,7 @@ const Dashboard = () => {
             <th style={styles.tableHeader}>Name</th>
             <th style={styles.tableHeader}>Route</th>
             <th style={styles.tableHeader}>Date</th>
+            <th style={styles.tableHeader}>Created By</th>
             <th style={styles.tableHeader}>Status</th>
           </tr>
         </thead>
@@ -137,6 +138,13 @@ const Dashboard = () => {
                       minute: "2-digit",
                     })
                   : "N/A"}
+              </td>
+
+              {/* CREATED BY */}
+              <td style={styles.tableCell}>
+                <span style={styles.userBadge}>
+                  {e.username || "Guest"}
+                </span>
               </td>
 
               {/* STATUS */}
@@ -362,6 +370,14 @@ const styles = {
   statusBadge: {
     background: "#fef3c7",
     color: "#92400e",
+    padding: "4px 12px",
+    borderRadius: 12,
+    fontSize: 12,
+    fontWeight: 600
+  },
+  userBadge: {
+    background: "#dbeafe",
+    color: "#1e40af",
     padding: "4px 12px",
     borderRadius: 12,
     fontSize: 12,
