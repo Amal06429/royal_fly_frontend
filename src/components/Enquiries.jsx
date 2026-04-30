@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import api from "../services/api";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import AdminEnquiryForm from "./AdminEnquiryForm";
+import ConfirmEnquiryModal from "./ConfirmEnquiryModal";
 
 const Enquiries = () => {
   const [enquiries, setEnquiries] = useState([]);
@@ -13,6 +14,7 @@ const Enquiries = () => {
   const [createdByFilter, setCreatedByFilter] = useState(""); // New: filter by creator
   const [selectedEnquiries, setSelectedEnquiries] = useState([]);
   const [showPricingModal, setShowPricingModal] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showAdminEnquiryForm, setShowAdminEnquiryForm] = useState(false);
   const [enquiryTypeFilter, setEnquiryTypeFilter] = useState("all"); // all, customer, admin
   const [currentEnquiry, setCurrentEnquiry] = useState(null);
@@ -114,6 +116,18 @@ const Enquiries = () => {
       travelDate: enquiry.date || "",
       additionalNotes: ""
     });
+  };
+
+  // Open confirm modal
+  const handleOpenConfirmModal = (enquiry) => {
+    setCurrentEnquiry(enquiry);
+    setShowConfirmModal(true);
+  };
+
+  // Handle confirm enquiry
+  const handleConfirmEnquiry = () => {
+    fetchEnquiries();
+    setShowConfirmModal(false);
   };
 
   // Send WhatsApp to selected enquiries
@@ -430,12 +444,22 @@ const Enquiries = () => {
                     {item.username || 'Guest'}
                   </td>
                   <td style={styles.td}>
-                    <button 
-                      onClick={() => handleAddPricing(item)}
-                      style={styles.addPricingBtn}
-                    >
-                      ➕ 
-                    </button>
+                    <div style={{display: 'flex', gap: '6px'}}>
+                      <button 
+                        onClick={() => handleAddPricing(item)}
+                        style={styles.addPricingBtn}
+                        title="Send WhatsApp/Pricing"
+                      >
+                        ➕ 
+                      </button>
+                      <button 
+                        onClick={() => handleOpenConfirmModal(item)}
+                        style={styles.confirmBtn}
+                        title="Confirm Enquiry"
+                      >
+                        ✓ 
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
@@ -627,6 +651,14 @@ const Enquiries = () => {
           }}
         />
       )}
+
+      {/* Confirm Enquiry Modal */}
+      <ConfirmEnquiryModal
+        isOpen={showConfirmModal}
+        enquiry={currentEnquiry}
+        onClose={() => setShowConfirmModal(false)}
+        onConfirm={handleConfirmEnquiry}
+      />
     </div>
     </>
   );
@@ -759,6 +791,16 @@ const styles = {
     borderRadius: "6px",
     border: "none",
     background: "#10B981",
+    color: "#ffffff",
+    cursor: "pointer",
+    fontSize: "14px",
+    fontWeight: "500",
+  },
+  confirmBtn: {
+    padding: "8px 16px",
+    borderRadius: "6px",
+    border: "none",
+    background: "#059669",
     color: "#ffffff",
     cursor: "pointer",
     fontSize: "14px",

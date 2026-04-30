@@ -6,6 +6,7 @@ import Dashboard from "./pages/Dashboard";
 import FlightManagement from "./components/FlightManagement";
 import Enquiries from "./components/Enquiries";
 import Users from "./components/Users";
+import Confirmed from "./pages/Confirmed";
 import Layout from "./BaseTemplate/Layout";
 
 // Public
@@ -58,6 +59,7 @@ const App = () => {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/flights" element={<FlightManagement />} />
         <Route path="/enquiries" element={<Enquiries />} />
+        <Route path="/confirmed" element={<Confirmed />} />
         <Route path="/users" element={<Users />} />
       </Route>
 

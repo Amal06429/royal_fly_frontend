@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { LayoutDashboard, Plane, MessageSquare, Users, Settings, LogOut, Menu, X } from 'lucide-react'
+import { LayoutDashboard, Plane, MessageSquare, CheckCircle, Users, Settings, LogOut, Menu, X } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 
 const Sidebar = () => {
@@ -15,6 +15,7 @@ const Sidebar = () => {
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
     { id: 'flight', label: 'Tickets', icon: Plane, path: '/flights' },
     { id: 'enquiries', label: 'Enquiries', icon: MessageSquare, path: '/enquiries' },
+    { id: 'confirmed', label: 'Confirmed', icon: CheckCircle, path: '/confirmed' },
     ...(isAdmin ? [{ id: 'users', label: 'Users', icon: Users, path: '/users' }] : []),
   ]
 
