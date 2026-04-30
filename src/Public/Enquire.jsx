@@ -11,6 +11,7 @@ const Enquire = () => {
   const [phone, setPhone] = useState("")
   const [email, setEmail] = useState("")
   const [message, setMessage] = useState("")
+  const [travel_date, setTravelDate] = useState("")
 
   useEffect(() => {
     const flights = JSON.parse(localStorage.getItem("flights")) || []
@@ -20,16 +21,15 @@ const Enquire = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    // Prepare data matching backend serializer expectations
-   const enquiry = {
-  name,
-  phone,
-  email,
-  message,
-  from_city: flight.departureCity,
-  to_city: flight.destinationCity,
-}
-
+    const enquiry = {
+      name,
+      phone,
+      email,
+      message,
+      travel_date,
+      from_city: flight.departureCity,
+      to_city: flight.destinationCity,
+    }
 
     try {
       const response = await api.post('enquiries/create/', enquiry)
@@ -96,6 +96,18 @@ const Enquire = () => {
           </div>
 
           <div style={styles.formGroup}>
+            <label style={styles.label} htmlFor="travel_date">Preferred Travel Date</label>
+            <input 
+              id="travel_date"
+              name="travel_date"
+              type="date"
+              value={travel_date}
+              onChange={e => setTravelDate(e.target.value)}
+              style={styles.input}
+            />
+          </div>
+
+          <div style={styles.formGroup}>
             <label style={styles.label} htmlFor="message">Message</label>
             <textarea 
               id="message"
@@ -130,15 +142,17 @@ const styles = {
     background: 'white',
     borderRadius: '12px',
     boxShadow: '0 10px 40px rgba(255, 250, 249, 0.3)',
-    padding: '28px',
+    padding: '20px',
     maxWidth: '480px',
     width: '100%',
+    maxHeight: 'auto',
+    overflowY: 'visible',
   },
   title: {
     fontSize: '22px',
     fontWeight: '700',
     color: '#FF6B35',
-    margin: '0 0 16px 0',
+    margin: '0 0 12px 0',
     textAlign: 'center',
   },
   flightRoute: {
@@ -146,8 +160,8 @@ const styles = {
     justifyContent: 'center',
     alignItems: 'center',
     gap: '12px',
-    marginBottom: '24px',
-    padding: '14px',
+    marginBottom: '16px',
+    padding: '12px',
     background: 'linear-gradient(135deg, #FF8C42 0%, #FF6B35 100%)',
     borderRadius: '10px',
   },
@@ -164,12 +178,12 @@ const styles = {
   form: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '16px',
+    gap: '12px',
   },
   formGroup: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '6px',
+    gap: '4px',
   },
   label: {
     fontSize: '13px',
@@ -198,7 +212,7 @@ const styles = {
     background: '#FFF8F5',
     transition: 'all 0.3s ease',
     resize: 'vertical',
-    minHeight: '90px',
+    minHeight: '70px',
     boxSizing: 'border-box',
   },
   submitBtn: {
@@ -210,7 +224,7 @@ const styles = {
     fontSize: '15px',
     fontWeight: '600',
     cursor: 'pointer',
-    marginTop: '8px',
+    marginTop: '4px',
     textTransform: 'uppercase',
     letterSpacing: '1px',
     transition: 'all 0.3s ease',

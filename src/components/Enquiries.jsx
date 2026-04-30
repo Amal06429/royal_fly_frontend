@@ -402,6 +402,7 @@ const Enquiries = () => {
               <th style={styles.th}>Phone</th>
               <th style={styles.th}>Email</th>
               <th style={styles.th}>From → To</th>
+              <th style={styles.th}>Travel Date</th>
               <th style={styles.th}>Message/Notes</th>
               <th style={styles.th}>Created By</th>
               <th style={styles.th}>Action</th>
@@ -411,7 +412,7 @@ const Enquiries = () => {
           <tbody>
             {paginatedEnquiries.length === 0 ? (
               <tr>
-                <td colSpan="9" style={styles.noData}>
+                <td colSpan="10" style={styles.noData}>
                   No enquiries found
                 </td>
               </tr>
@@ -436,6 +437,9 @@ const Enquiries = () => {
                   <td style={styles.td}>{item.email}</td>
                   <td style={styles.td}>
                     {item.from_city?.toUpperCase()} → {item.to_city?.toUpperCase()}
+                  </td>
+                  <td style={styles.td}>
+                    {item.travel_date ? new Date(item.travel_date).toLocaleDateString('en-GB') : 'N/A'}
                   </td>
                   <td style={{...styles.td, maxWidth: '250px', wordWrap: 'break-word', whiteSpace: 'normal', fontSize: '13px'}}>
                     {item.message || item.notes || 'N/A'}

@@ -23,7 +23,7 @@ const Home = () => {
   // Form fields for enquiry
   const [name, setName] = useState("")
   const [phone, setPhone] = useState("")
-  const [email, setEmail] = useState("")
+  const [travelDate, setTravelDate] = useState("")
   const [message, setMessage] = useState("")
   
   // Form fields for no-flights enquiry
@@ -100,7 +100,7 @@ const Home = () => {
     // Reset form
     setName("")
     setPhone("")
-    setEmail("")
+    setTravelDate("")
     setMessage("")
   }
 
@@ -152,7 +152,7 @@ const Home = () => {
     const enquiry = {
       name,
       phone,
-      email,
+      travel_date: travelDate,
       message,
       from_city: selectedFlight.departureCity,
       to_city: selectedFlight.destinationCity
@@ -916,15 +916,13 @@ const Home = () => {
               </div>
 
               <div style={styles.formGroup}>
-                <label style={styles.formLabel} htmlFor="email">Email Address</label>
+                <label style={styles.formLabel} htmlFor="travel_date">Preferred Travel Date</label>
                 <input 
-                  id="email"
-                  type="email"
-                  placeholder="Enter your email" 
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
+                  id="travel_date"
+                  type="date"
+                  value={travelDate}
+                  onChange={e => setTravelDate(e.target.value)}
                   style={styles.formInput}
-                  required
                 />
               </div>
 

@@ -67,10 +67,10 @@ const EnquiryForm = ({ onClose }) => {
     modal: {
       background: "white",
       borderRadius: "16px",
-      padding: "40px",
+      padding: "30px",
       maxWidth: "550px",
       width: "90%",
-      maxHeight: "90vh",
+      maxHeight: "85vh",
       overflowY: "auto",
       boxShadow: "0 20px 60px rgba(0, 0, 0, 0.3)",
       animation: "slideUp 0.3s ease-out",
@@ -100,12 +100,12 @@ const EnquiryForm = ({ onClose }) => {
     subtitle: {
       fontSize: "14px",
       color: "#666",
-      marginBottom: "30px",
+      marginBottom: "16px",
     },
     form: {
       display: "flex",
       flexDirection: "column",
-      gap: "20px",
+      gap: "14px",
     },
     formGroup: {
       display: "flex",
@@ -136,7 +136,7 @@ const EnquiryForm = ({ onClose }) => {
       borderRadius: "8px",
       outline: "none",
       transition: "border-color 0.3s",
-      minHeight: "100px",
+      minHeight: "70px",
       fontFamily: "inherit",
       resize: "vertical",
     },
