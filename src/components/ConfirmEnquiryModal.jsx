@@ -14,7 +14,9 @@ const ConfirmEnquiryModal = ({ isOpen, enquiry, onClose, onConfirm }) => {
     sale_price: "",
     pnr: "",
     profit: "",
+    label_name: "",
     status: "pending",
+    label_colour: "",
   });
 
   useEffect(() => {
@@ -30,7 +32,9 @@ const ConfirmEnquiryModal = ({ isOpen, enquiry, onClose, onConfirm }) => {
         sale_price: enquiry.sale_price || "",
         pnr: enquiry.pnr || "",
         profit: enquiry.profit || "",
+        label_name: enquiry.label_name || "",
         status: enquiry.status || "pending",
+        label_colour: enquiry.label_colour || "",
       });
     }
   }, [enquiry, isOpen]);
@@ -50,6 +54,8 @@ const ConfirmEnquiryModal = ({ isOpen, enquiry, onClose, onConfirm }) => {
         sale_price: formData.sale_price,
         pnr: formData.pnr,
         profit: formData.profit,
+        label_name: formData.label_name,
+        label_colour: formData.label_colour,
       });
 
       alert("Enquiry updated successfully! ✅");
@@ -96,6 +102,10 @@ const ConfirmEnquiryModal = ({ isOpen, enquiry, onClose, onConfirm }) => {
           border-bottom: none !important;
           padding-bottom: 0 !important;
         }
+        .modal-close-btn:hover {
+          background: rgba(255,255,255,0.3) !important;
+          transform: scale(1.05) !important;
+        }
       `}</style>
       <div style={styles.overlay} onClick={onClose}>
         <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
@@ -106,7 +116,7 @@ const ConfirmEnquiryModal = ({ isOpen, enquiry, onClose, onConfirm }) => {
               </svg>
               Confirm Enquiry
             </h3>
-            <button onClick={onClose} style={styles.closeBtn}>
+            <button onClick={onClose} style={styles.closeBtn} className="modal-close-btn">
               <X size={20} />
             </button>
           </div>
@@ -139,6 +149,13 @@ const ConfirmEnquiryModal = ({ isOpen, enquiry, onClose, onConfirm }) => {
             <div style={styles.infoRow} data-info-row>
               <span style={styles.infoLabel}>Message/Notes</span>
               <span style={styles.infoValue}>{formData.message || "N/A"}</span>
+            </div>
+
+            <div style={styles.infoRow} data-info-row>
+              <span style={styles.infoLabel}>Created By</span>
+              <span style={styles.infoValue}>
+                {enquiry?.username || enquiry?.created_by || 'N/A'}
+              </span>
             </div>
           </div>
 
@@ -216,6 +233,46 @@ const ConfirmEnquiryModal = ({ isOpen, enquiry, onClose, onConfirm }) => {
               <option value="confirmed">Confirmed</option>
             </select>
           </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Label Name</label>
+            <input
+              type="text"
+              value={formData.label_name}
+              onChange={(e) => setFormData({...formData, label_name: e.target.value})}
+              style={styles.input}
+              placeholder="Enter label name"
+            />
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Label Colour</label>
+            <div style={{display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center'}}>
+              {[
+                {name: 'Red', value: '#ef4444'},
+                {name: 'Orange', value: '#f97316'},
+                {name: 'Yellow', value: '#eab308'},
+                {name: 'Green', value: '#10b981'},
+                {name: 'Blue', value: '#3b82f6'},
+                {name: 'Indigo', value: '#6366f1'},
+                {name: 'Purple', value: '#a855f7'},
+                {name: 'Pink', value: '#ec4899'},
+                {name: 'Gray', value: '#6b7280'},
+              ].map((color) => (
+                <div
+                  key={color.value}
+                  onClick={() => setFormData({...formData, label_colour: formData.label_colour === color.value ? '' : color.value})}
+                  style={{
+                    ...styles.colorOption,
+                    backgroundColor: color.value,
+                    border: formData.label_colour === color.value ? '3px solid #000' : '2px solid #e5e7eb',
+                    transform: formData.label_colour === color.value ? 'scale(1.1)' : 'scale(1)',
+                  }}
+                  title={color.name}
+                />
+              ))}
+            </div>
+          </div>
         </div>
 
         <div style={styles.footer}>
@@ -274,142 +331,135 @@ const styles = {
     gap: "8px",
   },
   closeBtn: {
-    background: "rgba(255,255,255,0.2)",
+    background: "rgba(255,255,255,0.25)",
     border: "none",
     cursor: "pointer",
     color: "white",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
+    width: "40px",
+    height: "40px",
     borderRadius: "6px",
-    padding: "6px",
     transition: "all 0.2s",
-    hover: {
-      background: "rgba(255,255,255,0.3)",
-    }
+    padding: "0",
+    flexShrink: 0,
   },
   content: {
     padding: "24px",
-    background: "#fafbfc",
   },
   customerInfoBox: {
-    background: "white",
-    borderRadius: "12px",
-    padding: "18px 20px",
+    background: "#f9fafb",
+    borderRadius: "8px",
+    padding: "16px",
     marginBottom: "20px",
-    border: "1.5px solid #e5e7eb",
-    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
   },
   customerInfoTitle: {
-    margin: "0 0 16px 0",
     fontSize: "14px",
-    fontWeight: "700",
-    color: "#1f2937",
-    textTransform: "uppercase",
-    letterSpacing: "0.5px",
+    fontWeight: "600",
+    color: "#374151",
+    marginBottom: "12px",
+    marginTop: 0,
   },
   infoRow: {
     display: "flex",
     justifyContent: "space-between",
-    alignItems: "flex-start",
-    paddingBottom: "14px",
-    borderBottom: "1px solid #f0f1f3",
-    gap: "12px",
-    flexWrap: "wrap",
+    paddingBottom: "10px",
+    marginBottom: "10px",
+    borderBottom: "1px solid #e5e7eb",
   },
   infoLabel: {
-    fontSize: "12px",
-    fontWeight: "600",
+    fontSize: "13px",
     color: "#6b7280",
-    textTransform: "uppercase",
-    letterSpacing: "0.4px",
-    minWidth: "140px",
+    fontWeight: "500",
   },
   infoValue: {
     fontSize: "13px",
-    fontWeight: "500",
-    color: "#1f2937",
+    color: "#111827",
+    fontWeight: "600",
     textAlign: "right",
-    flex: 1,
-    wordBreak: "break-word",
+  },
+  divider: {
+    height: "1px",
+    background: "#e5e7eb",
+    margin: "20px 0",
+  },
+  sectionTitle: {
+    fontSize: "16px",
+    fontWeight: "600",
+    color: "#111827",
+    marginBottom: "16px",
   },
   formGroup: {
-    marginBottom: "18px",
+    marginBottom: "16px",
   },
   label: {
     display: "block",
     fontSize: "13px",
     fontWeight: "600",
-    marginBottom: "8px",
     color: "#374151",
-    textTransform: "uppercase",
-    letterSpacing: "0.5px",
+    marginBottom: "6px",
   },
   input: {
     width: "100%",
-    padding: "11px 14px",
-    border: "1.5px solid #d1d5db",
-    borderRadius: "8px",
-    fontSize: "13px",
-    fontFamily: "inherit",
-    boxSizing: "border-box",
+    padding: "10px 12px",
+    border: "1px solid #d1d5db",
+    borderRadius: "6px",
+    fontSize: "14px",
     transition: "all 0.2s",
-    background: "white",
-  },
-  textarea: {
-    minHeight: "80px",
-    resize: "vertical",
+    boxSizing: "border-box",
   },
   twoColumn: {
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
-    gap: "16px",
-  },
-  divider: {
-    height: "2px",
-    background: "linear-gradient(90deg, #e5e7eb 0%, #f3f4f6 50%, #e5e7eb 100%)",
-    margin: "24px 0",
-  },
-  sectionTitle: {
-    fontSize: "14px",
-    fontWeight: "700",
-    color: "#1f2937",
-    marginBottom: "16px",
-    marginTop: "8px",
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
+    gap: "12px",
   },
   footer: {
     display: "flex",
-    gap: "12px",
     justifyContent: "flex-end",
+    gap: "12px",
     padding: "20px 24px",
     borderTop: "1px solid #e5e7eb",
-    background: "white",
+    background: "#f9fafb",
   },
   cancelBtn: {
     padding: "10px 20px",
-    border: "1.5px solid #d1d5db",
-    borderRadius: "8px",
+    border: "1px solid #d1d5db",
+    borderRadius: "6px",
     background: "white",
-    cursor: "pointer",
+    color: "#374151",
     fontSize: "14px",
     fontWeight: "600",
-    color: "#374151",
+    cursor: "pointer",
     transition: "all 0.2s",
   },
   confirmBtn: {
-    padding: "10px 24px",
+    padding: "10px 20px",
     border: "none",
-    borderRadius: "8px",
+    borderRadius: "6px",
     background: "linear-gradient(135deg, #059669 0%, #10B981 100%)",
     color: "white",
-    cursor: "pointer",
     fontSize: "14px",
     fontWeight: "600",
+    cursor: "pointer",
     transition: "all 0.2s",
-    boxShadow: "0 4px 12px rgba(5, 150, 105, 0.3)",
+  },
+  colourBadge: {
+    padding: "6px 12px",
+    borderRadius: "6px",
+    color: "white",
+    fontSize: "12px",
+    fontWeight: "600",
+    minWidth: "60px",
+    textAlign: "center",
+  },
+  colorOption: {
+    width: "36px",
+    height: "36px",
+    borderRadius: "8px",
+    cursor: "pointer",
+    transition: "all 0.2s",
+    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
   },
 };
 

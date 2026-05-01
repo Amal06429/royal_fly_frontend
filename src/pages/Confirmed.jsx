@@ -7,6 +7,9 @@ const Confirmed = () => {
   const [search, setSearch] = useState("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+  const [selectedLabel, setSelectedLabel] = useState("");
+  const [selectedCreator, setSelectedCreator] = useState("");
+  const [labelMenuOpen, setLabelMenuOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoaded, setIsLoaded] = useState(false);
   const itemsPerPage = 10;
@@ -30,6 +33,22 @@ const Confirmed = () => {
   }, []);
 
   // Filters
+  const creators = Array.from(new Set(confirmedEnquiries.map(e => (e.username || e.created_by)).filter(Boolean))).sort();
+  const labelColours = Array.from(new Set(confirmedEnquiries.map(e => e.label_colour).filter(Boolean)));
+
+  // Map of common hex colours to friendly names — keep in sync with ConfirmEnquiryModal colour list
+  const colourNames = {
+    '#ef4444': 'Red',
+    '#f97316': 'Orange',
+    '#eab308': 'Yellow',
+    '#10b981': 'Green',
+    '#3b82f6': 'Blue',
+    '#6366f1': 'Indigo',
+    '#a855f7': 'Purple',
+    '#ec4899': 'Pink',
+    '#6b7280': 'Gray',
+  };
+
   const filteredEnquiries = confirmedEnquiries.filter((item) => {
     const matchesSearch =
       item.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -41,7 +60,10 @@ const Confirmed = () => {
     const isAfterFrom = fromDate ? enquiryDate >= new Date(fromDate) : true;
     const isBeforeTo = toDate ? enquiryDate <= new Date(toDate) : true;
 
-    return matchesSearch && isAfterFrom && isBeforeTo;
+    const matchesLabel = selectedLabel ? item.label_colour === selectedLabel : true;
+    const matchesCreator = selectedCreator ? (item.username || item.created_by) === selectedCreator : true;
+
+    return matchesSearch && isAfterFrom && isBeforeTo && matchesLabel && matchesCreator;
   });
 
   // Pagination logic
@@ -55,7 +77,7 @@ const Confirmed = () => {
 
   // Export to CSV
   const handleExportCSV = () => {
-    const headers = ["Name", "Email", "Phone", "Route", "Travel Date", "Fare Type", "Sale Price", "PNR", "Profit", "Created Date"];
+    const headers = ["Name", "Email", "Phone", "Route", "Travel Date", "Fare Type", "Sale Price", "PNR", "Profit", "Label Name", "Created Date"];
     const rows = filteredEnquiries.map(item => [
       item.name,
       item.email || "N/A",
@@ -66,6 +88,7 @@ const Confirmed = () => {
       item.sale_price || "0",
       item.pnr || "N/A",
       item.profit || "0",
+      item.label_name || "N/A",
       new Date(item.created_at).toLocaleDateString('en-GB')
     ]);
 
@@ -146,6 +169,63 @@ const Confirmed = () => {
             onFocus={(e) => e.target.style.borderColor = "#059669"}
             onBlur={(e) => e.target.style.borderColor = "#d1d5db"}
           />
+
+          {/* Created By filter */}
+          <select
+            value={selectedCreator}
+            onChange={(e) => { setSelectedCreator(e.target.value); setCurrentPage(1); }}
+            style={styles.creatorSelect}
+          >
+            <option value="">All Creators</option>
+            {creators.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+
+          {/* Label colour filter (custom dropdown with swatches) */}
+          <div style={styles.labelDropdown}>
+            <button
+              onClick={() => setLabelMenuOpen(!labelMenuOpen)}
+              style={styles.labelDropdownButton}
+              type="button"
+              aria-label={selectedLabel ? (colourNames[selectedLabel] || selectedLabel) : 'All colours'}
+            >
+              <span style={{display: 'inline-flex', alignItems: 'center'}}>
+                <span
+                  style={{...styles.swatchSmall, backgroundColor: selectedLabel || '#ffffff', border: selectedLabel ? '2px solid rgba(0,0,0,0.06)' : '1px solid #e5e7eb'}}
+                  title={selectedLabel ? (colourNames[selectedLabel] || selectedLabel) : 'All'}
+                >
+                  <span style={styles.swatchInner} />
+                </span>
+              </span>
+            </button>
+
+            {labelMenuOpen && (
+              <div style={styles.labelMenu}>
+                <div
+                  onClick={() => { setSelectedLabel(''); setCurrentPage(1); setLabelMenuOpen(false); }}
+                  style={styles.labelOption}
+                  title="All"
+                >
+                  <span style={{...styles.swatchSmall, backgroundColor: '#fff', border: '1px solid #e5e7eb'}}>
+                    <span style={styles.swatchInner} />
+                  </span>
+                </div>
+                {labelColours.map((col) => (
+                  <div
+                    key={col}
+                    onClick={() => { setSelectedLabel(col); setCurrentPage(1); setLabelMenuOpen(false); }}
+                    style={styles.labelOption}
+                    title={colourNames[col] || col}
+                  >
+                    <span style={{...styles.swatchSmall, backgroundColor: col}}>
+                      <span style={styles.swatchInner} />
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Table */}
@@ -162,14 +242,16 @@ const Confirmed = () => {
                 <th style={styles.th}>Sale Price</th>
                 <th style={styles.th}>PNR</th>
                 <th style={styles.th}>Profit</th>
+                <th style={styles.th}>Label</th>
                 <th style={styles.th}>Confirmed Date</th>
+                <th style={styles.th}>Created By</th>
               </tr>
             </thead>
 
             <tbody>
               {paginatedEnquiries.length === 0 ? (
                 <tr>
-                  <td colSpan="10" style={styles.noData}>
+                  <td colSpan="12" style={styles.noData}>
                     No confirmed enquiries found
                   </td>
                 </tr>
@@ -190,7 +272,19 @@ const Confirmed = () => {
                     <td style={styles.td}>{item.pnr || "N/A"}</td>
                     <td style={styles.td}>₹{item.profit || "0"}</td>
                     <td style={styles.td}>
+                      {item.label_colour && item.label_name ? (
+                        <span style={{...styles.labelBadge, backgroundColor: item.label_colour}}>
+                          {item.label_name}
+                        </span>
+                      ) : (
+                        <span style={{color: "#9ca3af", fontSize: "12px"}}>-</span>
+                      )}
+                    </td>
+                    <td style={styles.td}>
                       {new Date(item.created_at).toLocaleDateString('en-GB')}
+                    </td>
+                    <td style={styles.td}>
+                      {item.username || item.created_by || 'N/A'}
                     </td>
                   </tr>
                 ))
@@ -324,7 +418,7 @@ const styles = {
   },
   filterRow: {
     display: "grid",
-    gridTemplateColumns: "2fr 1fr 1fr",
+    gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr",
     gap: "14px",
     marginBottom: "22px",
   },
@@ -344,6 +438,86 @@ const styles = {
     background: "white",
     transition: "all 0.2s",
   },
+  creatorSelect: {
+    padding: "11px 14px",
+    border: "1.5px solid #d1d5db",
+    borderRadius: "8px",
+    fontSize: "13px",
+    background: "white",
+    transition: "all 0.2s",
+  },
+  labelDropdown: {
+    position: 'relative',
+    display: 'inline-block',
+  },
+  labelDropdownButton: {
+    padding: '10px 12px',
+    border: '1.5px solid #d1d5db',
+    borderRadius: '8px',
+    background: 'white',
+    cursor: 'pointer',
+    fontSize: '13px',
+    fontWeight: 600,
+  },
+  swatchSmall: {
+    width: 18,
+    height: 18,
+    borderRadius: '50%',
+    display: 'inline-block',
+    boxShadow: '0 3px 8px rgba(16,24,40,0.08)',
+    position: 'relative',
+    transition: 'transform 0.12s, box-shadow 0.12s',
+  },
+  swatchInner: {
+    position: 'absolute',
+    left: '50%',
+    top: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: 6,
+    height: 6,
+    borderRadius: '50%',
+    background: 'rgba(255,255,255,0.95)',
+    boxShadow: 'inset 0 -1px 0 rgba(0,0,0,0.08)',
+  },
+  swatchTable: {
+    width: 20,
+    height: 20,
+    borderRadius: '50%',
+    display: 'inline-block',
+    boxShadow: '0 3px 8px rgba(16,24,40,0.06)',
+    position: 'relative',
+  },
+  labelBadge: {
+    display: 'inline-block',
+    padding: '6px 12px',
+    borderRadius: '20px',
+    color: 'white',
+    fontSize: '12px',
+    fontWeight: '600',
+    boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+  },
+  labelMenu: {
+    position: 'absolute',
+    right: 0,
+    top: 'calc(100% + 8px)',
+    background: 'white',
+    border: '1px solid #e5e7eb',
+    borderRadius: 8,
+    boxShadow: '0 8px 20px rgba(0,0,0,0.08)',
+    zIndex: 1200,
+    minWidth: 160,
+    padding: 8,
+  },
+  labelOption: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 0,
+    padding: '8px',
+    cursor: 'pointer',
+    borderRadius: 6,
+  },
+  
   tableWrapper: {
     background: "white",
     borderRadius: "12px",
