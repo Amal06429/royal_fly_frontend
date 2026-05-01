@@ -16,9 +16,20 @@ const AdminEnquiryForm = ({ onClose, onSuccess }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    // If editing travel_date, keep user-friendly dd-mm-yyyy formatting
+    let newValue = value;
+    if (name === 'travel_date') {
+      const digits = value.replace(/\D/g, '').slice(0, 8); // ddmmyyyy
+      const parts = [];
+      if (digits.length > 0) parts.push(digits.slice(0, Math.min(2, digits.length)));
+      if (digits.length > 2) parts.push(digits.slice(2, Math.min(4, digits.length)));
+      if (digits.length > 4) parts.push(digits.slice(4, digits.length));
+      newValue = parts.join('-');
+    }
+
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: newValue
     }));
   };
 
@@ -33,7 +44,21 @@ const AdminEnquiryForm = ({ onClose, onSuccess }) => {
 
     setIsSubmitting(true);
     try {
-      const response = await api.post("enquiries/create/", formData);
+      // Prepare payload: convert travel_date from dd-mm-yyyy to YYYY-MM-DD if present
+      const payload = { ...formData };
+      if (payload.travel_date) {
+        const m = payload.travel_date.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+        if (m) {
+          const [, dd, mm, yyyy] = m;
+          payload.travel_date = `${yyyy}-${mm}-${dd}`; // ISO format for backend
+        } else {
+          alert('Please enter Preferred Travel Date in dd-mm-yyyy format');
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+      const response = await api.post("enquiries/create/", payload);
       alert("✅ Enquiry created successfully!");
       if (onSuccess) onSuccess();
       if (onClose) onClose();
@@ -293,12 +318,13 @@ const AdminEnquiryForm = ({ onClose, onSuccess }) => {
                 Preferred Travel Date
               </label>
               <input
-                type="date"
+                type="text"
                 name="travel_date"
                 value={formData.travel_date}
                 onChange={handleChange}
                 style={styles.input}
                 className="admin-enquiry-input"
+                placeholder="dd - mm - yyyy"
               />
             </div>
 
