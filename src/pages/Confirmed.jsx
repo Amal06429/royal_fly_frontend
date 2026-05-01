@@ -7,7 +7,7 @@ const Confirmed = () => {
   const [search, setSearch] = useState("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
-  const [selectedLabel, setSelectedLabel] = useState("");
+  const [selectedLabelName, setSelectedLabelName] = useState("");
   const [selectedCreator, setSelectedCreator] = useState("");
   const [labelMenuOpen, setLabelMenuOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -34,20 +34,19 @@ const Confirmed = () => {
 
   // Filters
   const creators = Array.from(new Set(confirmedEnquiries.map(e => (e.username || e.created_by)).filter(Boolean))).sort();
-  const labelColours = Array.from(new Set(confirmedEnquiries.map(e => e.label_colour).filter(Boolean)));
+  const labelOptions = Array.from(
+    confirmedEnquiries.reduce((map, item) => {
+      if (!item.label_name) {
+        return map;
+      }
 
-  // Map of common hex colours to friendly names — keep in sync with ConfirmEnquiryModal colour list
-  const colourNames = {
-    '#ef4444': 'Red',
-    '#f97316': 'Orange',
-    '#eab308': 'Yellow',
-    '#10b981': 'Green',
-    '#3b82f6': 'Blue',
-    '#6366f1': 'Indigo',
-    '#a855f7': 'Purple',
-    '#ec4899': 'Pink',
-    '#6b7280': 'Gray',
-  };
+      if (!map.has(item.label_name)) {
+        map.set(item.label_name, { name: item.label_name, color: item.label_colour || "#6b7280" });
+      }
+
+      return map;
+    }, new Map()).values()
+  ).sort((a, b) => a.name.localeCompare(b.name));
 
   const filteredEnquiries = confirmedEnquiries.filter((item) => {
     const matchesSearch =
@@ -60,7 +59,7 @@ const Confirmed = () => {
     const isAfterFrom = fromDate ? enquiryDate >= new Date(fromDate) : true;
     const isBeforeTo = toDate ? enquiryDate <= new Date(toDate) : true;
 
-    const matchesLabel = selectedLabel ? item.label_colour === selectedLabel : true;
+    const matchesLabel = selectedLabelName ? item.label_name === selectedLabelName : true;
     const matchesCreator = selectedCreator ? (item.username || item.created_by) === selectedCreator : true;
 
     return matchesSearch && isAfterFrom && isBeforeTo && matchesLabel && matchesCreator;
@@ -182,44 +181,46 @@ const Confirmed = () => {
             ))}
           </select>
 
-          {/* Label colour filter (custom dropdown with swatches) */}
+          {/* Label name filter with colour badge */}
           <div style={styles.labelDropdown}>
             <button
-              onClick={() => setLabelMenuOpen(!labelMenuOpen)}
-              style={styles.labelDropdownButton}
               type="button"
-              aria-label={selectedLabel ? (colourNames[selectedLabel] || selectedLabel) : 'All colours'}
+              onClick={() => setLabelMenuOpen((open) => !open)}
+              style={styles.labelDropdownButton}
             >
-              <span style={{display: 'inline-flex', alignItems: 'center'}}>
-                <span
-                  style={{...styles.swatchSmall, backgroundColor: selectedLabel || '#ffffff', border: selectedLabel ? '2px solid rgba(0,0,0,0.06)' : '1px solid #e5e7eb'}}
-                  title={selectedLabel ? (colourNames[selectedLabel] || selectedLabel) : 'All'}
-                >
-                  <span style={styles.swatchInner} />
+              {selectedLabelName ? (
+                <span style={{...styles.labelBadge, backgroundColor: labelOptions.find((item) => item.name === selectedLabelName)?.color || '#6b7280'}}>
+                  {selectedLabelName}
                 </span>
-              </span>
+              ) : (
+                <span style={styles.dropdownText}>All Labels</span>
+              )}
             </button>
 
             {labelMenuOpen && (
               <div style={styles.labelMenu}>
                 <div
-                  onClick={() => { setSelectedLabel(''); setCurrentPage(1); setLabelMenuOpen(false); }}
+                  onClick={() => {
+                    setSelectedLabelName("");
+                    setCurrentPage(1);
+                    setLabelMenuOpen(false);
+                  }}
                   style={styles.labelOption}
-                  title="All"
                 >
-                  <span style={{...styles.swatchSmall, backgroundColor: '#fff', border: '1px solid #e5e7eb'}}>
-                    <span style={styles.swatchInner} />
-                  </span>
+                  <span style={styles.dropdownText}>All Labels</span>
                 </div>
-                {labelColours.map((col) => (
+                {labelOptions.map((label) => (
                   <div
-                    key={col}
-                    onClick={() => { setSelectedLabel(col); setCurrentPage(1); setLabelMenuOpen(false); }}
+                    key={label.name}
+                    onClick={() => {
+                      setSelectedLabelName(label.name);
+                      setCurrentPage(1);
+                      setLabelMenuOpen(false);
+                    }}
                     style={styles.labelOption}
-                    title={colourNames[col] || col}
                   >
-                    <span style={{...styles.swatchSmall, backgroundColor: col}}>
-                      <span style={styles.swatchInner} />
+                    <span style={{...styles.labelBadge, backgroundColor: label.color}}>
+                      {label.name}
                     </span>
                   </div>
                 ))}
@@ -447,17 +448,22 @@ const styles = {
     transition: "all 0.2s",
   },
   labelDropdown: {
-    position: 'relative',
-    display: 'inline-block',
+    position: "relative",
+    minWidth: "170px",
   },
   labelDropdownButton: {
-    padding: '10px 12px',
-    border: '1.5px solid #d1d5db',
-    borderRadius: '8px',
-    background: 'white',
-    cursor: 'pointer',
-    fontSize: '13px',
-    fontWeight: 600,
+    width: "100%",
+    padding: "10px 14px",
+    border: "1.5px solid #d1d5db",
+    borderRadius: "8px",
+    background: "white",
+    cursor: "pointer",
+    fontSize: "13px",
+    fontWeight: "600",
+    textAlign: "left",
+  },
+  dropdownText: {
+    color: "#374151",
   },
   swatchSmall: {
     width: 18,
@@ -505,15 +511,15 @@ const styles = {
     borderRadius: 8,
     boxShadow: '0 8px 20px rgba(0,0,0,0.08)',
     zIndex: 1200,
-    minWidth: 160,
+    minWidth: 190,
     padding: 8,
   },
   labelOption: {
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 0,
-    padding: '8px',
+    justifyContent: 'flex-start',
+    gap: 8,
+    padding: '8px 10px',
     cursor: 'pointer',
     borderRadius: 6,
   },
