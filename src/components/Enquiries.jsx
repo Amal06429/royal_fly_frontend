@@ -39,6 +39,19 @@ const Enquiries = () => {
       });
   };
 
+  const formatTravelDate = (value) => {
+    if (!value) {
+      return "N/A";
+    }
+
+    const parsed = new Date(value);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed.toLocaleDateString('en-GB');
+    }
+
+    return String(value);
+  };
+
   useEffect(() => {
     setIsLoaded(true);
     fetchEnquiries();
@@ -436,7 +449,7 @@ const Enquiries = () => {
                     {item.from_city?.toUpperCase()} → {item.to_city?.toUpperCase()}
                   </td>
                   <td style={styles.td}>
-                    {item.travel_date ? new Date(item.travel_date).toLocaleDateString('en-GB') : 'N/A'}
+                    {formatTravelDate(item.travel_date)}
                   </td>
                   <td style={{...styles.td, maxWidth: '250px', wordWrap: 'break-word', whiteSpace: 'normal', fontSize: '13px'}}>
                     {item.message || item.notes || 'N/A'}
