@@ -1,6 +1,120 @@
 import React, { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import api from "../services/api";
+
+const DEFAULT_LABEL_COLOR = "#10b981";
+const CANCEL_LABEL_COLOR = "#ef4444";
+const RESERVED_LABEL_COLORS = {
+  confirm: DEFAULT_LABEL_COLOR,
+  cancel: CANCEL_LABEL_COLOR,
+};
+
+const createLabel = (name = "", color = "#6b7280") => ({
+  id: (typeof crypto !== "undefined" && crypto.randomUUID) ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
+  name,
+  color,
+});
+
+const parseStoredLabels = (labelName, labelColour) => {
+  if (!labelName) {
+    return [createLabel("", labelColour || DEFAULT_LABEL_COLOR)];
+  }
+
+  try {
+    const parsed = JSON.parse(labelName);
+    if (Array.isArray(parsed)) {
+      const labels = parsed
+        .map((item) => createLabel(item?.name || "", item?.color || labelColour || DEFAULT_LABEL_COLOR))
+        .filter((item) => item.name || item.color);
+
+      if (labels.length) {
+        return labels;
+      }
+    }
+  } catch (error) {
+    // Fall back to the delimited storage format below.
+  }
+
+  const names = labelName.split(";").map((item) => item.trim()).filter(Boolean);
+  const colors = (labelColour || "").split(";").map((item) => item.trim()).filter(Boolean);
+
+  if (!names.length) {
+    return [createLabel("", colors[0] || DEFAULT_LABEL_COLOR)];
+  }
+
+  return names.map((name, index) => createLabel(name, colors[index] || colors[0] || DEFAULT_LABEL_COLOR));
+};
+
+const serializeLabels = (labels) => {
+  const validLabels = (labels || [])
+    .filter((label) => label && String(label.name).trim())
+    .map((label) => ({
+      name: String(label.name || "").trim(),
+      color: String(label.color || "#6b7280").trim(),
+    }));
+
+  return {
+    label_name: validLabels.map((label) => label.name).join(";") || "",
+    label_colour: validLabels.map((label) => label.color).join(";") || "",
+  };
+};
+
+const getLabelColor = (name, currentColor) => {
+  const normalizedName = name.trim().toLowerCase();
+
+  if (normalizedName === "confirm") {
+    return RESERVED_LABEL_COLORS.confirm;
+  }
+
+  if (normalizedName === "cancel") {
+    return RESERVED_LABEL_COLORS.cancel;
+  }
+
+  return currentColor || DEFAULT_LABEL_COLOR;
+};
+
+const darkenHexColor = (hexColor, amount = 0.18) => {
+  if (!hexColor || typeof hexColor !== "string") {
+    return "#4b5563";
+  }
+
+  const hex = hexColor.replace("#", "");
+  if (!/^[0-9a-fA-F]{6}$/.test(hex)) {
+    return hexColor;
+  }
+
+  const clamp = (value) => Math.max(0, Math.min(255, value));
+  const factor = 1 - amount;
+  const r = clamp(Math.round(parseInt(hex.slice(0, 2), 16) * factor));
+  const g = clamp(Math.round(parseInt(hex.slice(2, 4), 16) * factor));
+  const b = clamp(Math.round(parseInt(hex.slice(4, 6), 16) * factor));
+
+  const toHex = (value) => value.toString(16).padStart(2, "0");
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+};
+
+const normalizeLabelName = (name = "") => String(name).trim().toLowerCase();
+
+const mergeUniqueLabels = (baseLabels = [], incomingLabels = []) => {
+  const merged = [];
+  const seen = new Set();
+
+  [...baseLabels, ...incomingLabels].forEach((label) => {
+    if (!label || !String(label.name || "").trim()) {
+      return;
+    }
+
+    const normalized = normalizeLabelName(label.name);
+    if (seen.has(normalized)) {
+      return;
+    }
+
+    seen.add(normalized);
+    merged.push(createLabel(String(label.name).trim(), label.color || "#6b7280"));
+  });
+
+  return merged;
+};
 
 const ConfirmEnquiryModal = ({ isOpen, enquiry, onClose, onConfirm }) => {
   const [formData, setFormData] = useState({
@@ -14,13 +128,48 @@ const ConfirmEnquiryModal = ({ isOpen, enquiry, onClose, onConfirm }) => {
     sale_price: "",
     pnr: "",
     profit: "",
-    label_name: "",
     status: "pending",
-    label_colour: "",
   });
+  const [customLabels, setCustomLabels] = useState([]);
+  const [selectedBuiltIn, setSelectedBuiltIn] = useState({
+    confirm: false,
+    cancel: false,
+  });
+  const [selectedCustom, setSelectedCustom] = useState(null);
+  const [showCustomForm, setShowCustomForm] = useState(false);
+  const [newCustomLabel, setNewCustomLabel] = useState({ name: "", color: "#6b7280" });
+  const [labelsHydrated, setLabelsHydrated] = useState(false);
+
+  // Load saved custom labels from localStorage on mount
+  useEffect(() => {
+    try {
+      const savedLabels = localStorage.getItem("customEnquiryLabels");
+      if (savedLabels) {
+        setCustomLabels(JSON.parse(savedLabels));
+      }
+    } catch (err) {
+      console.error("Error loading custom labels:", err);
+    } finally {
+      setLabelsHydrated(true);
+    }
+  }, []);
+
+  // Save custom labels to localStorage whenever they change
+  useEffect(() => {
+    if (!labelsHydrated) {
+      return;
+    }
+
+    try {
+      localStorage.setItem("customEnquiryLabels", JSON.stringify(customLabels));
+    } catch (err) {
+      console.error("Error saving custom labels:", err);
+    }
+  }, [customLabels, labelsHydrated]);
 
   useEffect(() => {
     if (enquiry) {
+      const enquiryLabels = parseStoredLabels(enquiry.label_name, enquiry.label_colour);
       setFormData({
         name: enquiry.name || "",
         date: enquiry.created_at ? new Date(enquiry.created_at).toLocaleDateString('en-GB') : "",
@@ -32,12 +181,97 @@ const ConfirmEnquiryModal = ({ isOpen, enquiry, onClose, onConfirm }) => {
         sale_price: enquiry.sale_price || "",
         pnr: enquiry.pnr || "",
         profit: enquiry.profit || "",
-        label_name: enquiry.label_name || "",
         status: enquiry.status || "pending",
-        label_colour: enquiry.label_colour || "",
       });
+      try {
+        // Check which built-in labels exist in the stored labels
+        const hasConfirm = (enquiryLabels || []).some((label) => label && label.name && label.name.trim().toLowerCase() === "confirm");
+        const hasCancel = (enquiryLabels || []).some((label) => label && label.name && label.name.trim().toLowerCase() === "cancel");
+        
+        // Update selectedBuiltIn based on what's stored
+        setSelectedBuiltIn({
+          confirm: hasConfirm,
+          cancel: hasCancel,
+        });
+        
+        // Merge enquiry custom labels into reusable localStorage label options.
+        const custom = (enquiryLabels || []).filter((label) => label && label.name && !["confirm", "cancel"].includes(normalizeLabelName(label.name)));
+        setCustomLabels((current) => mergeUniqueLabels(current, custom || []));
+        
+        // Find which custom label is selected (only one allowed)
+        const selectedLabel = custom && custom.length > 0 ? custom[0].name : null;
+        setSelectedCustom(selectedLabel);
+      } catch (err) {
+        console.error("Error processing custom labels:", err);
+        setSelectedBuiltIn({ confirm: false, cancel: false });
+        setSelectedCustom(null);
+      }
     }
   }, [enquiry, isOpen]);
+
+  const handleToggleBuiltIn = (label) => {
+    setSelectedBuiltIn((prev) => {
+      const newState = { ...prev, [label]: !prev[label] };
+      // If selecting built-in, deselect custom label
+      if (newState[label]) {
+        setSelectedCustom(null);
+      }
+      return newState;
+    });
+  };
+
+  const handleSelectCustomLabel = (labelName) => {
+    // Toggle selection of custom label
+    if (selectedCustom === labelName) {
+      setSelectedCustom(null);
+    } else {
+      // Deselect all built-in labels when selecting custom
+      setSelectedBuiltIn({ confirm: false, cancel: false });
+      setSelectedCustom(labelName);
+    }
+  };
+
+  const addCustomLabel = () => {
+    setShowCustomForm(true);
+    setNewCustomLabel({ name: "", color: "#6b7280" });
+  };
+
+  const submitCustomLabel = () => {
+    const trimmedName = newCustomLabel.name.trim();
+    if (!trimmedName) {
+      alert("Please enter a label name");
+      return;
+    }
+
+    const existingLabel = customLabels.find(
+      (label) => normalizeLabelName(label.name) === normalizeLabelName(trimmedName)
+    );
+
+    if (existingLabel) {
+      setSelectedCustom(existingLabel.name);
+      setShowCustomForm(false);
+      setNewCustomLabel({ name: "", color: "#6b7280" });
+      return;
+    }
+
+    const newLabel = createLabel(trimmedName, newCustomLabel.color);
+    setCustomLabels((current) => mergeUniqueLabels(current, [newLabel]));
+    setSelectedCustom(newLabel.name);
+    setShowCustomForm(false);
+    setNewCustomLabel({ name: "", color: "#6b7280" });
+  };
+
+  const cancelCustomLabel = () => {
+    setShowCustomForm(false);
+    setNewCustomLabel({ name: "", color: "#6b7280" });
+  };
+
+  const removeCustomLabel = (name) => {
+    setCustomLabels((current) => current.filter((label) => label.name !== name));
+    if (selectedCustom === name) {
+      setSelectedCustom(null);
+    }
+  };
 
   const handleConfirm = async () => {
     if (!formData.travel_date) {
@@ -45,24 +279,52 @@ const ConfirmEnquiryModal = ({ isOpen, enquiry, onClose, onConfirm }) => {
       return;
     }
 
+    const allLabels = [];
+    if (selectedBuiltIn.confirm) {
+      allLabels.push({ name: "Confirm", color: DEFAULT_LABEL_COLOR });
+    }
+    if (selectedBuiltIn.cancel) {
+      allLabels.push({ name: "Cancel", color: CANCEL_LABEL_COLOR });
+    }
+    if (selectedCustom) {
+      const customLabel = customLabels.find(l => l.name === selectedCustom);
+      if (customLabel) {
+        allLabels.push({ name: customLabel.name, color: customLabel.color });
+      }
+    }
+
+    // Validation: at least one label must be selected
+    if (allLabels.length === 0) {
+      alert("Please select at least one label");
+      return;
+    }
+
+    const serializedLabels = serializeLabels(allLabels);
+
     try {
+      // Prepare payload with proper data types
+      const payload = {
+        status: formData.status || "pending",
+        travel_date: formData.travel_date || "",
+        fare_type: formData.fare_type || "",
+        sale_price: formData.sale_price ? parseFloat(formData.sale_price) : 0,
+        pnr: formData.pnr || "",
+        profit: formData.profit ? parseFloat(formData.profit) : 0,
+        label_name: String(serializedLabels.label_name || ""),
+        label_colour: String(serializedLabels.label_colour || ""),
+      };
+
+      console.log("Sending payload:", payload);
+      
       // Update enquiry with all details
-      await api.patch(`enquiries/${enquiry.id}/`, {
-        status: formData.status,
-        travel_date: formData.travel_date,
-        fare_type: formData.fare_type,
-        sale_price: formData.sale_price,
-        pnr: formData.pnr,
-        profit: formData.profit,
-        label_name: formData.label_name,
-        label_colour: formData.label_colour,
-      });
+      await api.patch(`enquiries/${enquiry.id}/`, payload);
 
       alert("Enquiry updated successfully! ✅");
       onConfirm && onConfirm();
       onClose();
     } catch (error) {
       console.error("Error updating enquiry:", error);
+      console.error("Response data:", error.response?.data);
       alert("Failed to update enquiry. Please try again.");
     }
   };
@@ -95,8 +357,12 @@ const ConfirmEnquiryModal = ({ isOpen, enquiry, onClose, onConfirm }) => {
           border-color: #059669 !important;
           box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1) !important;
         }
-        button:hover {
-          transform: translateY(-2px);
+        button:hover:not(:disabled) {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        button:active:not(:disabled) {
+          transform: translateY(0);
         }
         [data-info-row]:last-child {
           border-bottom: none !important;
@@ -235,43 +501,108 @@ const ConfirmEnquiryModal = ({ isOpen, enquiry, onClose, onConfirm }) => {
           </div>
 
           <div style={styles.formGroup}>
-            <label style={styles.label}>Label Name</label>
-            <input
-              type="text"
-              value={formData.label_name}
-              onChange={(e) => setFormData({...formData, label_name: e.target.value})}
-              style={styles.input}
-              placeholder="Enter label name"
-            />
-          </div>
-
-          <div style={styles.formGroup}>
-            <label style={styles.label}>Label Colour</label>
-            <div style={{display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center'}}>
-              {[
-                {name: 'Red', value: '#ef4444'},
-                {name: 'Orange', value: '#f97316'},
-                {name: 'Yellow', value: '#eab308'},
-                {name: 'Green', value: '#10b981'},
-                {name: 'Blue', value: '#3b82f6'},
-                {name: 'Indigo', value: '#6366f1'},
-                {name: 'Purple', value: '#a855f7'},
-                {name: 'Pink', value: '#ec4899'},
-                {name: 'Gray', value: '#6b7280'},
-              ].map((color) => (
-                <div
-                  key={color.value}
-                  onClick={() => setFormData({...formData, label_colour: formData.label_colour === color.value ? '' : color.value})}
-                  style={{
-                    ...styles.colorOption,
-                    backgroundColor: color.value,
-                    border: formData.label_colour === color.value ? '3px solid #000' : '2px solid #e5e7eb',
-                    transform: formData.label_colour === color.value ? 'scale(1.1)' : 'scale(1)',
-                  }}
-                  title={color.name}
-                />
-              ))}
+            <div style={styles.labelHeader}>
+              <label style={styles.label}>Labels</label>
             </div>
+
+            {/* Built-in labels */}
+            <div style={styles.builtInLabels}>
+              <button
+                type="button"
+                onClick={() => handleToggleBuiltIn("confirm")}
+                style={{
+                  ...styles.labelBadge,
+                  backgroundColor: DEFAULT_LABEL_COLOR,
+                  color: "white",
+                  opacity: selectedBuiltIn.confirm ? 1 : 0.6,
+                  border: selectedBuiltIn.confirm ? "2px solid #047857" : "2px solid transparent",
+                  boxShadow: selectedBuiltIn.confirm ? `inset 0 0 0 2px #047857` : "none",
+                }}
+                title="Toggle Confirm label"
+              >
+                Confirm
+              </button>
+              <button
+                type="button"
+                onClick={() => handleToggleBuiltIn("cancel")}
+                style={{
+                  ...styles.labelBadge,
+                  backgroundColor: CANCEL_LABEL_COLOR,
+                  color: "white",
+                  opacity: selectedBuiltIn.cancel ? 1 : 0.6,
+                  border: selectedBuiltIn.cancel ? "2px solid #991b1b" : "2px solid transparent",
+                  boxShadow: selectedBuiltIn.cancel ? `inset 0 0 0 2px #991b1b` : "none",
+                }}
+                title="Toggle Cancel label"
+              >
+                Cancel
+              </button>
+              {customLabels.map((label) => (
+                <button
+                  key={label.name}
+                  type="button"
+                  onClick={() => handleSelectCustomLabel(label.name)}
+                  style={{
+                    ...styles.labelBadge,
+                    backgroundColor: darkenHexColor(label.color),
+                    color: "white",
+                    opacity: selectedCustom === label.name ? 1 : 0.6,
+                    border: selectedCustom === label.name ? `2px solid ${darkenHexColor(label.color, 0.35)}` : "2px solid transparent",
+                    boxShadow: selectedCustom === label.name ? `inset 0 0 0 2px ${darkenHexColor(label.color, 0.35)}` : "none",
+                  }}
+                  title={`Toggle ${label.name} label`}
+                >
+                  {label.name}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => addCustomLabel()}
+                style={styles.addLabelBtn}
+                title="Add custom label"
+              >
+                <Plus size={16} />
+              </button>
+            </div>
+
+            {/* Custom label form */}
+            {showCustomForm && (
+              <div style={styles.customFormContainer}>
+                <input
+                  type="text"
+                  value={newCustomLabel.name}
+                  onChange={(e) => setNewCustomLabel({...newCustomLabel, name: e.target.value})}
+                  style={styles.input}
+                  placeholder="Custom label name"
+                  autoFocus
+                />
+                <div style={styles.colorPickerRow}>
+                  <input
+                    type="color"
+                    value={newCustomLabel.color}
+                    onChange={(e) => setNewCustomLabel({...newCustomLabel, color: e.target.value})}
+                    style={styles.colorInput}
+                    aria-label="Pick color"
+                  />
+                </div>
+                <div style={styles.formButtonGroup}>
+                  <button
+                    type="button"
+                    onClick={submitCustomLabel}
+                    style={{...styles.removeLabelBtn, background: "#10b981", color: "white", border: "none"}}
+                  >
+                    Add
+                  </button>
+                  <button
+                    type="button"
+                    onClick={cancelCustomLabel}
+                    style={styles.removeLabelBtn}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -393,6 +724,33 @@ const styles = {
   formGroup: {
     marginBottom: "16px",
   },
+  labelHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: "12px",
+    marginBottom: "12px",
+    flexWrap: "wrap",
+  },
+  builtInLabels: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    marginBottom: "12px",
+    flexWrap: "wrap",
+  },
+  labelBadge: {
+    display: "inline-block",
+    padding: "8px 16px",
+    borderRadius: "20px",
+    color: "white",
+    fontSize: "13px",
+    fontWeight: "600",
+    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+    border: "none",
+    cursor: "pointer",
+    transition: "all 0.2s",
+  },
   label: {
     display: "block",
     fontSize: "13px",
@@ -408,6 +766,37 @@ const styles = {
     fontSize: "14px",
     transition: "all 0.2s",
     boxSizing: "border-box",
+  },
+  labelEditor: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "12px",
+  },
+  labelRow: {
+    display: "grid",
+    gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1.1fr) auto",
+    gap: "8px",
+    alignItems: "center",
+  },
+  labelFieldGroup: {
+    minWidth: 0,
+  },
+  labelColorWrap: {
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+    minWidth: 0,
+    flexWrap: "wrap",
+  },
+  colorInput: {
+    width: "34px",
+    height: "34px",
+    padding: 0,
+    border: "1px solid #d1d5db",
+    borderRadius: "6px",
+    background: "white",
+    cursor: "pointer",
+    flexShrink: 0,
   },
   twoColumn: {
     display: "grid",
@@ -453,13 +842,61 @@ const styles = {
     minWidth: "60px",
     textAlign: "center",
   },
-  colorOption: {
-    width: "36px",
-    height: "36px",
-    borderRadius: "8px",
+  addLabelBtn: {
+    width: "38px",
+    height: "38px",
+    borderRadius: "50%",
+    border: "2px solid #10b981",
+    background: "white",
+    color: "#10b981",
     cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontWeight: "bold",
+    fontSize: "24px",
     transition: "all 0.2s",
-    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+    padding: 0,
+  },
+
+  removeLabelBtn: {
+    minWidth: "74px",
+    height: "34px",
+    borderRadius: "999px",
+    border: "1px solid #94a3b8",
+    background: "white",
+    color: "#64748b",
+    cursor: "pointer",
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "0 12px",
+    fontSize: "13px",
+    fontWeight: "600",
+  },
+  customFormContainer: {
+    marginTop: "12px",
+    padding: "12px",
+    border: "1px solid #e5e7eb",
+    borderRadius: "8px",
+    background: "#f9fafb",
+  },
+  colorPickerRow: {
+    display: "flex",
+    gap: "6px",
+    alignItems: "center",
+    marginTop: "8px",
+  },
+  formButtonGroup: {
+    display: "flex",
+    gap: "8px",
+    marginTop: "8px",
+  },
+  customLabelsRow: {
+    display: "flex",
+    gap: "8px",
+    flexWrap: "wrap",
+    marginTop: "8px",
   },
 };
 

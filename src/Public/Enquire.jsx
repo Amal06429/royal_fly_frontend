@@ -9,7 +9,6 @@ const Enquire = () => {
 
   const [name, setName] = useState("")
   const [phone, setPhone] = useState("")
-  const [email, setEmail] = useState("")
   const [message, setMessage] = useState("")
   const [travel_date, setTravelDate] = useState("")
 
@@ -24,7 +23,6 @@ const Enquire = () => {
     const enquiry = {
       name,
       phone,
-      email,
       message,
       travel_date,
       from_city: flight.departureCity,
@@ -77,19 +75,6 @@ const Enquire = () => {
               placeholder="Enter your phone number" 
               value={phone}
               onChange={e => setPhone(e.target.value)}
-              style={styles.input}
-              required
-            />
-          </div>
-
-          <div style={styles.formGroup}>
-            <label style={styles.label} htmlFor="email">Email Address</label>
-            <input 
-              id="email"
-              type="email"
-              placeholder="Enter your email" 
-              value={email}
-              onChange={e => setEmail(e.target.value)}
               style={styles.input}
               required
             />

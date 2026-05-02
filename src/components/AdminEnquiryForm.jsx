@@ -4,7 +4,6 @@ import api from "../services/api";
 const AdminEnquiryForm = ({ onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
     name: "",
-    email: "",
     phone: "",
     travel_date: "",
     from_city: "",
@@ -246,37 +245,20 @@ const AdminEnquiryForm = ({ onClose, onSuccess }) => {
               />
             </div>
 
-            <div style={styles.row}>
-              <div style={styles.formGroup}>
-                <label style={styles.label}>
-                  Phone Number<span style={styles.required}>*</span>
-                </label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  placeholder="Phone number"
-                  style={styles.input}
-                  className="admin-enquiry-input"
-                  required
-                />
-              </div>
-
-              <div style={styles.formGroup}>
-                <label style={styles.label}>
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="Email (optional)"
-                  style={styles.input}
-                  className="admin-enquiry-input"
-                />
-              </div>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>
+                Phone Number<span style={styles.required}>*</span>
+              </label>
+              <input
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                placeholder="Phone number"
+                style={styles.input}
+                className="admin-enquiry-input"
+                required
+              />
             </div>
 
             <div style={styles.row}>

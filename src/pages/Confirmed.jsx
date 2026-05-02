@@ -2,6 +2,31 @@ import React, { useEffect, useState } from "react";
 import api from "../services/api";
 import { ChevronLeft, ChevronRight, Download, RefreshCw } from "lucide-react";
 
+const splitLabels = (value) => {
+  if (!value) {
+    return [];
+  }
+
+  return String(value)
+    .split(";")
+    .map((item) => item.trim())
+    .filter(Boolean);
+};
+
+const getLabelEntries = (item) => {
+  const names = splitLabels(item.label_name);
+  const colors = splitLabels(item.label_colour);
+
+  if (!names.length) {
+    return [];
+  }
+
+  return names.map((name, index) => ({
+    name,
+    color: colors[index] || colors[0] || "#6b7280",
+  }));
+};
+
 const Confirmed = () => {
   const [confirmedEnquiries, setConfirmedEnquiries] = useState([]);
   const [search, setSearch] = useState("");
@@ -36,13 +61,11 @@ const Confirmed = () => {
   const creators = Array.from(new Set(confirmedEnquiries.map(e => (e.username || e.created_by)).filter(Boolean))).sort();
   const labelOptions = Array.from(
     confirmedEnquiries.reduce((map, item) => {
-      if (!item.label_name) {
-        return map;
-      }
-
-      if (!map.has(item.label_name)) {
-        map.set(item.label_name, { name: item.label_name, color: item.label_colour || "#6b7280" });
-      }
+      getLabelEntries(item).forEach((label) => {
+        if (!map.has(label.name)) {
+          map.set(label.name, label);
+        }
+      });
 
       return map;
     }, new Map()).values()
@@ -51,7 +74,6 @@ const Confirmed = () => {
   const filteredEnquiries = confirmedEnquiries.filter((item) => {
     const matchesSearch =
       item.name.toLowerCase().includes(search.toLowerCase()) ||
-      (item.email && item.email.toLowerCase().includes(search.toLowerCase())) ||
       item.phone.includes(search) ||
       (item.pnr && item.pnr.includes(search));
 
@@ -59,7 +81,7 @@ const Confirmed = () => {
     const isAfterFrom = fromDate ? enquiryDate >= new Date(fromDate) : true;
     const isBeforeTo = toDate ? enquiryDate <= new Date(toDate) : true;
 
-    const matchesLabel = selectedLabelName ? item.label_name === selectedLabelName : true;
+    const matchesLabel = selectedLabelName ? getLabelEntries(item).some((label) => label.name === selectedLabelName) : true;
     const matchesCreator = selectedCreator ? (item.username || item.created_by) === selectedCreator : true;
 
     return matchesSearch && isAfterFrom && isBeforeTo && matchesLabel && matchesCreator;
@@ -76,10 +98,9 @@ const Confirmed = () => {
 
   // Export to CSV
   const handleExportCSV = () => {
-    const headers = ["Name", "Email", "Phone", "Route", "Travel Date", "Fare Type", "Sale Price", "PNR", "Profit", "Label Name", "Created Date"];
+    const headers = ["Name", "Phone", "Route", "Travel Date", "Fare Type", "Sale Price", "PNR", "Profit", "Label Name", "Created Date"];
     const rows = filteredEnquiries.map(item => [
       item.name,
-      item.email || "N/A",
       item.phone,
       `${item.from_city?.toUpperCase()} → ${item.to_city?.toUpperCase()}`,
       item.travel_date || "N/A",
@@ -87,7 +108,7 @@ const Confirmed = () => {
       item.sale_price || "0",
       item.pnr || "N/A",
       item.profit || "0",
-      item.label_name || "N/A",
+      getLabelEntries(item).map((label) => label.name).join("; ") || "N/A",
       new Date(item.created_at).toLocaleDateString('en-GB')
     ]);
 
@@ -134,7 +155,7 @@ const Confirmed = () => {
         <div style={{...styles.filterRow, animation: isLoaded ? 'slideDown 0.6s ease-out' : 'none', animationDelay: '0.2s', animationFillMode: 'both'}}>
           <input
             type="text"
-            placeholder="Search name / email / phone / PNR"
+            placeholder="Search name / phone / PNR"
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -193,7 +214,7 @@ const Confirmed = () => {
                   {selectedLabelName}
                 </span>
               ) : (
-                <span style={styles.dropdownText}>All Labels</span>
+                <span style={styles.dropdownText}>All Status</span>
               )}
             </button>
 
@@ -235,7 +256,6 @@ const Confirmed = () => {
             <thead>
               <tr style={styles.headerRow}>
                 <th style={styles.th}>Name</th>
-                <th style={styles.th}>Email</th>
                 <th style={styles.th}>Phone</th>
                 <th style={styles.th}>Route</th>
                 <th style={styles.th}>Travel Date</th>
@@ -243,7 +263,7 @@ const Confirmed = () => {
                 <th style={styles.th}>Sale Price</th>
                 <th style={styles.th}>PNR</th>
                 <th style={styles.th}>Profit</th>
-                <th style={styles.th}>Label</th>
+                <th style={styles.th}>Status</th>
                 <th style={styles.th}>Confirmed Date</th>
                 <th style={styles.th}>Created By</th>
               </tr>
@@ -260,7 +280,6 @@ const Confirmed = () => {
                 paginatedEnquiries.map((item) => (
                   <tr key={item.id} style={styles.bodyRow}>
                     <td style={styles.td}>{item.name}</td>
-                    <td style={styles.td}>{item.email || "N/A"}</td>
                     <td style={styles.td}>{item.phone}</td>
                     <td style={styles.td}>
                       {item.from_city?.toUpperCase()} → {item.to_city?.toUpperCase()}
@@ -273,10 +292,14 @@ const Confirmed = () => {
                     <td style={styles.td}>{item.pnr || "N/A"}</td>
                     <td style={styles.td}>₹{item.profit || "0"}</td>
                     <td style={styles.td}>
-                      {item.label_colour && item.label_name ? (
-                        <span style={{...styles.labelBadge, backgroundColor: item.label_colour}}>
-                          {item.label_name}
-                        </span>
+                      {getLabelEntries(item).length ? (
+                        <div style={styles.labelChipGroup}>
+                          {getLabelEntries(item).map((label) => (
+                            <span key={`${item.id}-${label.name}`} style={{...styles.labelBadge, backgroundColor: label.color}}>
+                              {label.name}
+                            </span>
+                          ))}
+                        </div>
                       ) : (
                         <span style={{color: "#9ca3af", fontSize: "12px"}}>-</span>
                       )}
@@ -501,6 +524,11 @@ const styles = {
     fontSize: '12px',
     fontWeight: '600',
     boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+  },
+  labelChipGroup: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '6px',
   },
   labelMenu: {
     position: 'absolute',

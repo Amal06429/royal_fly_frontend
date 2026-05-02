@@ -54,7 +54,6 @@ const Enquiries = () => {
   const filteredEnquiries = enquiries.filter((item) => {
     const matchesSearch =
       item.name.toLowerCase().includes(search.toLowerCase()) ||
-      (item.email && item.email.toLowerCase().includes(search.toLowerCase())) ||
       item.phone.includes(search);
 
     const enquiryDate = new Date(item.created_at || item.date);
@@ -312,7 +311,7 @@ const Enquiries = () => {
       <div style={{...styles.filterRow, animation: isLoaded ? 'slideDown 0.6s ease-out' : 'none', animationDelay: '0.2s', animationFillMode: 'both'}}>
         <input
           type="text"
-          placeholder="Search name / email / phone"
+          placeholder="Search name / phone"
           value={search}
           onChange={(e) => {
             setSearch(e.target.value);
@@ -400,7 +399,6 @@ const Enquiries = () => {
               <th style={styles.th}>Name</th>
               <th style={styles.th}>Date</th>
               <th style={styles.th}>Phone</th>
-              <th style={styles.th}>Email</th>
               <th style={styles.th}>From → To</th>
               <th style={styles.th}>Travel Date</th>
               <th style={styles.th}>Message/Notes</th>
@@ -434,7 +432,6 @@ const Enquiries = () => {
                     {item.created_at ? new Date(item.created_at).toLocaleDateString('en-GB') : 'N/A'}
                   </td>
                   <td style={styles.td}>{item.phone}</td>
-                  <td style={styles.td}>{item.email}</td>
                   <td style={styles.td}>
                     {item.from_city?.toUpperCase()} → {item.to_city?.toUpperCase()}
                   </td>
