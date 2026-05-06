@@ -6,6 +6,7 @@ import Dashboard from "./pages/Dashboard";
 import FlightManagement from "./components/FlightManagement";
 import Enquiries from "./components/Enquiries";
 import Users from "./components/Users";
+import Visa from "./components/Visa";
 import Confirmed from "./pages/Confirmed";
 import Layout from "./BaseTemplate/Layout";
 
@@ -60,6 +61,7 @@ const App = () => {
         <Route path="/flights" element={<FlightManagement />} />
         <Route path="/enquiries" element={<Enquiries />} />
         <Route path="/confirmed" element={<Confirmed />} />
+        <Route path="/visa" element={<Visa />} />
         <Route path="/users" element={<Users />} />
       </Route>
 

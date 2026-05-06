@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { LayoutDashboard, Plane, MessageSquare, CheckCircle, Users, Settings, LogOut, Menu, X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { LayoutDashboard, Plane, MessageSquare, CheckCircle, Users, Settings, LogOut, Menu, X, ChevronLeft, ChevronRight, FileText } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 
 const Sidebar = () => {
@@ -17,6 +17,7 @@ const Sidebar = () => {
     { id: 'flight', label: 'Tickets', icon: Plane, path: '/flights' },
     { id: 'enquiries', label: 'Enquiries', icon: MessageSquare, path: '/enquiries' },
     { id: 'confirmed', label: 'Confirmed', icon: CheckCircle, path: '/confirmed' },
+    { id: 'visa', label: 'Visa', icon: FileText, path: '/visa' },
     ...(isAdmin ? [{ id: 'users', label: 'Users', icon: Users, path: '/users' }] : []),
   ]
 
