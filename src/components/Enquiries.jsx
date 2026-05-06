@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import api from "../services/api";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, SquarePen, Plus, Check } from "lucide-react";
 import AdminEnquiryForm from "./AdminEnquiryForm";
+import EditEnquiryForm from "./EditEnquiryForm";
 import ConfirmEnquiryModal from "./ConfirmEnquiryModal";
 
 const Enquiries = () => {
@@ -26,6 +27,7 @@ const Enquiries = () => {
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [editingEnquiry, setEditingEnquiry] = useState(null);
   const itemsPerPage = 10;
 
   // Fetch enquiries
@@ -44,11 +46,7 @@ const Enquiries = () => {
       return "N/A";
     }
 
-    const parsed = new Date(value);
-    if (!Number.isNaN(parsed.getTime())) {
-      return parsed.toLocaleDateString('en-GB');
-    }
-
+    // Return exactly what the user typed (no date parsing)
     return String(value);
   };
 
@@ -244,6 +242,13 @@ const Enquiries = () => {
       <style>{`
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        button:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        button:active {
+          transform: translateY(0);
+        }
       `}</style>
       <div style={{...styles.container, animation: isLoaded ? 'fadeIn 0.6s ease-out' : 'none', animationFillMode: 'both'}}>
       <div style={{...styles.headingWrapper, animation: isLoaded ? 'slideDown 0.6s ease-out' : 'none', animationDelay: '0.1s', animationFillMode: 'both'}}>
@@ -458,20 +463,27 @@ const Enquiries = () => {
                     {item.username || 'Guest'}
                   </td>
                   <td style={styles.td}>
-                    <div style={{display: 'flex', gap: '6px'}}>
+                    <div style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
+                      <button 
+                        onClick={() => setEditingEnquiry(item)}
+                        style={styles.editBtn}
+                        title="Edit Enquiry"
+                      >
+                        <SquarePen size={16} />
+                      </button>
                       <button 
                         onClick={() => handleAddPricing(item)}
                         style={styles.addPricingBtn}
                         title="Send WhatsApp/Pricing"
                       >
-                        ➕ 
+                        <Plus size={16} />
                       </button>
                       <button 
                         onClick={() => handleOpenConfirmModal(item)}
                         style={styles.confirmBtn}
                         title="Confirm Enquiry"
                       >
-                        ✓ 
+                        <Check size={16} />
                       </button>
                     </div>
                   </td>
@@ -498,7 +510,8 @@ const Enquiries = () => {
             </button>
             
             <div style={styles.pageNumbers}>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              {/* Show pages 1-6 or less if total pages is less than 6 */}
+              {Array.from({ length: Math.min(6, totalPages) }, (_, i) => i + 1).map((page) => (
                 <button
                   key={page}
                   onClick={() => handlePageChange(page)}
@@ -513,6 +526,27 @@ const Enquiries = () => {
                   {page}
                 </button>
               ))}
+              
+              {/* Show ... and last page if total pages > 6 */}
+              {totalPages > 6 && (
+                <>
+                  <span style={{...styles.pageButton, background: "transparent", border: "none", cursor: "default", padding: "0 4px"}}>
+                    ...
+                  </span>
+                  <button
+                    onClick={() => handlePageChange(totalPages)}
+                    style={{
+                      ...styles.pageButton,
+                      background: currentPage === totalPages ? "#ff8c42" : "#fff",
+                      color: currentPage === totalPages ? "#fff" : "#374151",
+                      border: currentPage === totalPages ? "1px solid #ff8c42" : "1px solid #e5e7eb",
+                      fontWeight: currentPage === totalPages ? "600" : "400"
+                    }}
+                  >
+                    {totalPages}
+                  </button>
+                </>
+              )}
             </div>
             
             <button
@@ -666,6 +700,18 @@ const Enquiries = () => {
         />
       )}
 
+      {/* Edit Enquiry Form Modal */}
+      {editingEnquiry && (
+        <EditEnquiryForm 
+          enquiry={editingEnquiry}
+          onClose={() => setEditingEnquiry(null)}
+          onSuccess={() => {
+            fetchEnquiries();
+            setEditingEnquiry(null);
+          }}
+        />
+      )}
+
       {/* Confirm Enquiry Modal */}
       <ConfirmEnquiryModal
         isOpen={showConfirmModal}
@@ -681,7 +727,7 @@ const Enquiries = () => {
 /* Styles */
 const styles = {
   container: {
-    padding: "25px",
+    padding: "20px",
     background: "#f5f6fa",
     minHeight: "100vh",
     fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
@@ -689,8 +735,8 @@ const styles = {
   headingWrapper: {
     display: "flex",
     alignItems: "center",
-    gap: "15px",
-    marginBottom: "20px",
+    gap: "12px",
+    marginBottom: "16px",
     flexWrap: "wrap",
   },
   iconBox: {
@@ -727,7 +773,7 @@ const styles = {
   },
   filterRow: {
     display: "flex",
-    gap: "12px",
+    gap: "10px",
     marginBottom: "20px",
     flexWrap: "wrap",
   },
@@ -771,21 +817,23 @@ const styles = {
   headerRow: {
     background: "#ffffff",
     borderBottom: "2px solid #e5e7eb",
+    height: "40px",
   },
   th: {
-    padding: "16px",
+    padding: "12px 10px",
     textAlign: "left",
-    fontSize: "14px",
+    fontSize: "13px",
     fontWeight: "600",
     color: "#374151",
     whiteSpace: "nowrap",
   },
   bodyRow: {
     borderBottom: "1px solid #f3f4f6",
+    height: "45px",
   },
   td: {
-    padding: "16px",
-    fontSize: "14px",
+    padding: "12px 10px",
+    fontSize: "13px",
     color: "#4b5563",
     verticalAlign: "middle",
   },
@@ -800,25 +848,53 @@ const styles = {
     height: "18px",
     cursor: "pointer",
   },
-  addPricingBtn: {
-    padding: "8px 16px",
-    borderRadius: "6px",
-    border: "none",
-    background: "#10B981",
-    color: "#ffffff",
+  editBtn: {
+    padding: "8px 12px",
+    borderRadius: "8px",
+    border: "2px solid #3B82F6",
+    background: "transparent",
+    color: "#3B82F6",
     cursor: "pointer",
-    fontSize: "14px",
-    fontWeight: "500",
+    fontSize: "16px",
+    fontWeight: "600",
+    transition: "all 0.2s ease",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: "36px",
+    minHeight: "36px",
+  },
+  addPricingBtn: {
+    padding: "8px 12px",
+    borderRadius: "8px",
+    border: "2px solid #FF8C42",
+    background: "transparent",
+    color: "#FF8C42",
+    cursor: "pointer",
+    fontSize: "16px",
+    fontWeight: "600",
+    transition: "all 0.2s ease",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: "36px",
+    minHeight: "36px",
   },
   confirmBtn: {
-    padding: "8px 16px",
-    borderRadius: "6px",
-    border: "none",
-    background: "#059669",
-    color: "#ffffff",
+    padding: "8px 12px",
+    borderRadius: "8px",
+    border: "2px solid #10B981",
+    background: "transparent",
+    color: "#10B981",
     cursor: "pointer",
-    fontSize: "14px",
-    fontWeight: "500",
+    fontSize: "16px",
+    fontWeight: "600",
+    transition: "all 0.2s ease",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: "36px",
+    minHeight: "36px",
   },
   modalOverlay: {
     position: "fixed",
@@ -908,7 +984,7 @@ const styles = {
     justifyContent: "center",
     alignItems: "center",
     gap: "8px",
-    padding: "20px",
+    padding: "12px 20px",
     borderTop: "1px solid #e5e7eb",
     flexWrap: "wrap",
   },

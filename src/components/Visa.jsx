@@ -347,7 +347,7 @@ const Visa = () => {
             >
               ← Previous
             </button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+            {Array.from({ length: Math.min(6, totalPages) }, (_, i) => i + 1).map(page => (
               <button
                 key={page}
                 onClick={() => handlePageChange(page)}
@@ -360,6 +360,24 @@ const Visa = () => {
                 {page}
               </button>
             ))}
+            {/* Show ... and last page if total pages > 6 */}
+            {totalPages > 6 && (
+              <>
+                <span style={{...styles.paginationButton, background: "transparent", border: "none", cursor: "default", padding: "0 4px"}}>
+                  ...
+                </span>
+                <button
+                  onClick={() => handlePageChange(totalPages)}
+                  style={
+                    totalPages === currentPage
+                      ? { ...styles.paginationButton, ...styles.paginationButtonActive }
+                      : styles.paginationButton
+                  }
+                >
+                  {totalPages}
+                </button>
+              </>
+            )}
             <button
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
@@ -677,30 +695,36 @@ const styles = {
     gap: '4px',
   },
   editButton: {
-    backgroundColor: '#dbeafe',
-    color: '#0284c7',
-    border: 'none',
-    padding: '4px 6px',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    transition: 'background-color 0.2s',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '12px',
+    backgroundColor: "transparent",
+    color: "#3B82F6",
+    border: "2px solid #3B82F6",
+    padding: "6px 10px",
+    borderRadius: "6px",
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "14px",
+    fontWeight: "600",
+    minWidth: "32px",
+    minHeight: "32px",
   },
   deleteButton: {
-    backgroundColor: '#fee2e2',
-    color: '#dc2626',
-    border: 'none',
-    padding: '4px 6px',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    transition: 'background-color 0.2s',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '12px',
+    backgroundColor: "transparent",
+    color: "#DC2626",
+    border: "2px solid #DC2626",
+    padding: "6px 10px",
+    borderRadius: "6px",
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "14px",
+    fontWeight: "600",
+    minWidth: "32px",
+    minHeight: "32px",
   },
   editButtonDisabled: {
     backgroundColor: '#dbeafe',
