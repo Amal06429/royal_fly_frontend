@@ -125,8 +125,8 @@ const Visa = () => {
   // Filtering logic
   const filteredVisas = visas.filter(visa => {
     const matchesSearch =
-      visa.fill_no.toLowerCase().includes(search.toLowerCase()) ||
-      visa.passport_number.includes(search)
+      (visa.fill_no && visa.fill_no.toLowerCase().includes(search.toLowerCase())) ||
+      (visa.passport_number && visa.passport_number.includes(search))
 
     const matchesPassport = filterPassport ? visa.passport_number === filterPassport : true
     const matchesContact = filterContact ? visa.contact_no === filterContact : true

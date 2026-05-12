@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import api from "../services/api";
-import { ChevronLeft, ChevronRight, Download, RefreshCw } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, RefreshCw, Edit2, X } from "lucide-react";
 
 const splitLabels = (value) => {
   if (!value) {
@@ -37,6 +37,9 @@ const Confirmed = () => {
   const [labelMenuOpen, setLabelMenuOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [editFormData, setEditFormData] = useState({});
   const itemsPerPage = 10;
 
   // Fetch confirmed enquiries
@@ -136,6 +139,57 @@ const Confirmed = () => {
     a.href = url;
     a.download = `confirmed-enquiries-${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
+  };
+
+  // Edit functions
+  const handleEditClick = (enquiry) => {
+    setEditingId(enquiry.id);
+    setEditFormData({
+      name: enquiry.name || "",
+      phone: enquiry.phone || "",
+      from_city: enquiry.from_city || "",
+      to_city: enquiry.to_city || "",
+      travel_date: enquiry.travel_date || "",
+      fare_type: enquiry.fare_type || "",
+      sale_price: enquiry.sale_price || "",
+      pnr: enquiry.pnr || "",
+      profit: enquiry.profit || "",
+      notes: enquiry.notes || "",
+    });
+    setShowEditModal(true);
+  };
+
+  const handleEditFormChange = (e) => {
+    const { name, value } = e.target;
+    setEditFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleUpdateEnquiry = async () => {
+    if (!editFormData.name || !editFormData.phone || !editFormData.from_city || !editFormData.to_city) {
+      alert("Please fill in all required fields");
+      return;
+    }
+
+    try {
+      await api.put(`enquiries/${editingId}/`, editFormData);
+      alert("✅ Enquiry updated successfully!");
+      fetchConfirmedEnquiries();
+      setShowEditModal(false);
+      setEditingId(null);
+      setEditFormData({});
+    } catch (error) {
+      console.error("Failed to update enquiry", error);
+      alert("❌ Failed to update enquiry");
+    }
+  };
+
+  const closeEditModal = () => {
+    setShowEditModal(false);
+    setEditingId(null);
+    setEditFormData({});
   };
 
   return (
@@ -279,6 +333,7 @@ const Confirmed = () => {
                 <th style={styles.th}>Status</th>
                 <th style={styles.th}>Confirmed Date</th>
                 <th style={styles.th}>Created By</th>
+                <th style={styles.th}>Actions</th>
               </tr>
             </thead>
 
@@ -322,6 +377,15 @@ const Confirmed = () => {
                     </td>
                     <td style={styles.td}>
                       {item.username || item.created_by || 'N/A'}
+                    </td>
+                    <td style={styles.td}>
+                      <button
+                        onClick={() => handleEditClick(item)}
+                        style={styles.editButton}
+                        title="Edit this enquiry"
+                      >
+                        <Edit2 size={16} />
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -383,6 +447,160 @@ const Confirmed = () => {
           )}
         </div>
       </div>
+
+      {/* Edit Modal */}
+      {showEditModal && (
+        <div style={styles.modalOverlay} onClick={closeEditModal}>
+          <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <button style={styles.closeButton} onClick={closeEditModal}>
+              <X size={24} />
+            </button>
+            <h2 style={styles.modalTitle}>Edit Enquiry Details</h2>
+            
+            <div style={styles.editForm}>
+              <div style={styles.formRow}>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Name <span style={styles.required}>*</span></label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={editFormData.name}
+                    onChange={handleEditFormChange}
+                    style={styles.input}
+                    placeholder="Enter name"
+                  />
+                </div>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Phone <span style={styles.required}>*</span></label>
+                  <input
+                    type="text"
+                    name="phone"
+                    value={editFormData.phone}
+                    onChange={handleEditFormChange}
+                    style={styles.input}
+                    placeholder="Enter phone"
+                  />
+                </div>
+              </div>
+
+              <div style={styles.formRow}>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>From City <span style={styles.required}>*</span></label>
+                  <input
+                    type="text"
+                    name="from_city"
+                    value={editFormData.from_city}
+                    onChange={handleEditFormChange}
+                    style={styles.input}
+                    placeholder="Enter from city"
+                  />
+                </div>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>To City <span style={styles.required}>*</span></label>
+                  <input
+                    type="text"
+                    name="to_city"
+                    value={editFormData.to_city}
+                    onChange={handleEditFormChange}
+                    style={styles.input}
+                    placeholder="Enter to city"
+                  />
+                </div>
+              </div>
+
+              <div style={styles.formRow}>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Travel Date</label>
+                  <input
+                    type="date"
+                    name="travel_date"
+                    value={editFormData.travel_date}
+                    onChange={handleEditFormChange}
+                    style={styles.input}
+                  />
+                </div>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Fare Type</label>
+                  <input
+                    type="text"
+                    name="fare_type"
+                    value={editFormData.fare_type}
+                    onChange={handleEditFormChange}
+                    style={styles.input}
+                    placeholder="GRP GE, NORMAL, etc."
+                  />
+                </div>
+              </div>
+
+              <div style={styles.formRow}>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Sale Price</label>
+                  <input
+                    type="number"
+                    name="sale_price"
+                    value={editFormData.sale_price}
+                    onChange={handleEditFormChange}
+                    style={styles.input}
+                    placeholder="Enter sale price"
+                  />
+                </div>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>PNR</label>
+                  <input
+                    type="text"
+                    name="pnr"
+                    value={editFormData.pnr}
+                    onChange={handleEditFormChange}
+                    style={styles.input}
+                    placeholder="Enter PNR"
+                  />
+                </div>
+              </div>
+
+              <div style={styles.formRow}>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Profit</label>
+                  <input
+                    type="number"
+                    name="profit"
+                    value={editFormData.profit}
+                    onChange={handleEditFormChange}
+                    style={styles.input}
+                    placeholder="Enter profit"
+                  />
+                </div>
+              </div>
+
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Notes</label>
+                <textarea
+                  name="notes"
+                  value={editFormData.notes}
+                  onChange={handleEditFormChange}
+                  style={styles.textarea}
+                  placeholder="Enter any additional notes"
+                  rows="3"
+                />
+              </div>
+
+              <div style={styles.buttonGroup}>
+                <button 
+                  onClick={handleUpdateEnquiry}
+                  style={styles.saveButton}
+                >
+                  Save Changes
+                </button>
+                <button 
+                  onClick={closeEditModal}
+                  style={styles.cancelButton}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
@@ -649,6 +867,135 @@ const styles = {
     color: "#6b7280",
     marginLeft: "16px",
     fontWeight: "500",
+  },
+  editButton: {
+    background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
+    color: "white",
+    border: "none",
+    padding: "8px 12px",
+    borderRadius: "6px",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    gap: "4px",
+    fontSize: "13px",
+    fontWeight: "600",
+    transition: "all 0.2s",
+    boxShadow: "0 2px 8px rgba(59, 130, 246, 0.2)",
+  },
+  modalOverlay: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: "rgba(0, 0, 0, 0.5)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 2000,
+  },
+  modal: {
+    background: "white",
+    borderRadius: "12px",
+    padding: "30px",
+    maxWidth: "700px",
+    width: "90%",
+    maxHeight: "90vh",
+    overflowY: "auto",
+    boxShadow: "0 20px 60px rgba(0, 0, 0, 0.3)",
+    position: "relative",
+  },
+  closeButton: {
+    position: "absolute",
+    top: "15px",
+    right: "15px",
+    background: "transparent",
+    border: "none",
+    cursor: "pointer",
+    color: "#9ca3af",
+    padding: "5px",
+    display: "flex",
+    alignItems: "center",
+    transition: "color 0.2s",
+  },
+  modalTitle: {
+    fontSize: "22px",
+    fontWeight: "700",
+    color: "#1f2937",
+    marginBottom: "20px",
+    marginTop: "0",
+  },
+  editForm: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "16px",
+  },
+  formRow: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: "16px",
+  },
+  formGroup: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "6px",
+  },
+  label: {
+    fontSize: "13px",
+    fontWeight: "600",
+    color: "#374151",
+  },
+  required: {
+    color: "#ef4444",
+  },
+  input: {
+    padding: "10px 12px",
+    fontSize: "13px",
+    border: "1.5px solid #d1d5db",
+    borderRadius: "8px",
+    outline: "none",
+    transition: "border-color 0.2s",
+    fontFamily: "inherit",
+  },
+  textarea: {
+    padding: "10px 12px",
+    fontSize: "13px",
+    border: "1.5px solid #d1d5db",
+    borderRadius: "8px",
+    outline: "none",
+    transition: "border-color 0.2s",
+    fontFamily: "inherit",
+    resize: "vertical",
+  },
+  buttonGroup: {
+    display: "flex",
+    gap: "12px",
+    justifyContent: "flex-end",
+    marginTop: "20px",
+  },
+  saveButton: {
+    background: "linear-gradient(135deg, #10B981 0%, #059669 100%)",
+    color: "white",
+    border: "none",
+    padding: "11px 24px",
+    borderRadius: "8px",
+    cursor: "pointer",
+    fontSize: "13px",
+    fontWeight: "600",
+    transition: "all 0.2s",
+    boxShadow: "0 4px 12px rgba(16, 185, 129, 0.2)",
+  },
+  cancelButton: {
+    background: "#f3f4f6",
+    color: "#374151",
+    border: "1.5px solid #d1d5db",
+    padding: "11px 24px",
+    borderRadius: "8px",
+    cursor: "pointer",
+    fontSize: "13px",
+    fontWeight: "600",
+    transition: "all 0.2s",
   },
 };
 
