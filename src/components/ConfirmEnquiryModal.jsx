@@ -128,6 +128,8 @@ const ConfirmEnquiryModal = ({ isOpen, enquiry, onClose, onConfirm }) => {
     sale_price: "",
     pnr: "",
     profit: "",
+    credit_amount: "",
+    credit_note: "",
     status: "pending",
   });
   const [customLabels, setCustomLabels] = useState([]);
@@ -181,6 +183,8 @@ const ConfirmEnquiryModal = ({ isOpen, enquiry, onClose, onConfirm }) => {
         sale_price: enquiry.sale_price || "",
         pnr: enquiry.pnr || "",
         profit: enquiry.profit || "",
+        credit_amount: enquiry.credit_amount || "",
+        credit_note: enquiry.credit_note || "",
         status: enquiry.status || "pending",
       });
       try {
@@ -309,7 +313,9 @@ const ConfirmEnquiryModal = ({ isOpen, enquiry, onClose, onConfirm }) => {
         fare_type: formData.fare_type || "",
         sale_price: formData.sale_price ? parseFloat(formData.sale_price) : 0,
         pnr: formData.pnr || "",
-        profit: formData.profit ? parseFloat(formData.profit) : 0,
+        profit: formData.profit || "",
+        credit_amount: formData.credit_amount ? parseFloat(formData.credit_amount) : 0,
+        credit_note: formData.credit_note || "",
         label_name: String(serializedLabels.label_name || ""),
         label_colour: String(serializedLabels.label_colour || ""),
       };
@@ -479,11 +485,35 @@ const ConfirmEnquiryModal = ({ isOpen, enquiry, onClose, onConfirm }) => {
             <div style={styles.formGroup}>
               <label style={styles.label}>Profit</label>
               <input
-                type="number"
+                type="text"
                 value={formData.profit}
                 onChange={(e) => setFormData({...formData, profit: e.target.value})}
                 style={styles.input}
+                placeholder="Enter profit (number or text)"
+              />
+            </div>
+          </div>
+
+          <div style={styles.twoColumn}>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Credit Amount</label>
+              <input
+                type="number"
+                value={formData.credit_amount}
+                onChange={(e) => setFormData({...formData, credit_amount: e.target.value})}
+                style={styles.input}
                 placeholder="0.00"
+              />
+            </div>
+
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Credit Note</label>
+              <input
+                type="text"
+                value={formData.credit_note}
+                onChange={(e) => setFormData({...formData, credit_note: e.target.value})}
+                style={styles.input}
+                placeholder="Enter credit note"
               />
             </div>
           </div>

@@ -114,7 +114,7 @@ const Confirmed = () => {
 
   // Export to CSV
   const handleExportCSV = () => {
-    const headers = ["Name", "Phone", "Route", "Travel Date", "Fare Type", "Sale Price", "PNR", "Profit", "Label Name", "Created Date"];
+    const headers = ["Name", "Phone", "Route", "Travel Date", "Fare Type", "Sale Price", "PNR", "Profit", "Credit Amount", "Credit Note", "Label Name", "Created Date"];
     const rows = filteredEnquiries.map(item => [
       item.name,
       item.phone,
@@ -124,6 +124,8 @@ const Confirmed = () => {
       item.sale_price || "0",
       item.pnr || "N/A",
       item.profit || "0",
+      item.credit_amount || "0",
+      item.credit_note || "N/A",
       getLabelEntries(item).map((label) => label.name).join("; ") || "N/A",
       new Date(item.created_at).toLocaleDateString('en-GB')
     ]);
@@ -154,6 +156,8 @@ const Confirmed = () => {
       sale_price: enquiry.sale_price || "",
       pnr: enquiry.pnr || "",
       profit: enquiry.profit || "",
+      credit_amount: enquiry.credit_amount || "",
+      credit_note: enquiry.credit_note || "",
       notes: enquiry.notes || "",
     });
     setShowEditModal(true);
@@ -197,6 +201,23 @@ const Confirmed = () => {
       <style>{`
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Horizontal scrollbar styling */
+        div[style*="overflowX: auto"]::-webkit-scrollbar {
+          height: 8px;
+        }
+        div[style*="overflowX: auto"]::-webkit-scrollbar-track {
+          background: #f1f5f9;
+          border-radius: 10px;
+        }
+        div[style*="overflowX: auto"]::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 10px;
+          transition: background 0.3s;
+        }
+        div[style*="overflowX: auto"]::-webkit-scrollbar-thumb:hover {
+          background: #94a3b8;
+        }
       `}</style>
       <div style={{...styles.container, animation: isLoaded ? 'fadeIn 0.6s ease-out' : 'none', animationFillMode: 'both'}}>
         <div style={{...styles.headingWrapper, animation: isLoaded ? 'slideDown 0.6s ease-out' : 'none', animationDelay: '0.1s', animationFillMode: 'both'}}>
@@ -330,6 +351,8 @@ const Confirmed = () => {
                 <th style={styles.th}>Sale Price</th>
                 <th style={styles.th}>PNR</th>
                 <th style={styles.th}>Profit</th>
+                <th style={styles.th}>Credit Amount</th>
+                <th style={styles.th}>Credit Note</th>
                 <th style={styles.th}>Status</th>
                 <th style={styles.th}>Confirmed Date</th>
                 <th style={styles.th}>Created By</th>
@@ -340,7 +363,7 @@ const Confirmed = () => {
             <tbody>
               {paginatedEnquiries.length === 0 ? (
                 <tr>
-                  <td colSpan="12" style={styles.noData}>
+                  <td colSpan="14" style={styles.noData}>
                     No confirmed enquiries found
                   </td>
                 </tr>
@@ -359,6 +382,8 @@ const Confirmed = () => {
                     <td style={styles.td}>₹{item.sale_price || "0"}</td>
                     <td style={styles.td}>{item.pnr || "N/A"}</td>
                     <td style={styles.td}>₹{item.profit || "0"}</td>
+                    <td style={styles.td}>₹{item.credit_amount || "0"}</td>
+                    <td style={styles.td}>{item.credit_note || "N/A"}</td>
                     <td style={styles.td}>
                       {getLabelEntries(item).length ? (
                         <div style={styles.labelChipGroup}>
@@ -561,12 +586,37 @@ const Confirmed = () => {
                 <div style={styles.formGroup}>
                   <label style={styles.label}>Profit</label>
                   <input
-                    type="number"
+                    type="text"
                     name="profit"
                     value={editFormData.profit}
                     onChange={handleEditFormChange}
                     style={styles.input}
-                    placeholder="Enter profit"
+                    placeholder="Enter profit (number or text)"
+                  />
+                </div>
+              </div>
+
+              <div style={styles.formRow}>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Credit Amount</label>
+                  <input
+                    type="number"
+                    name="credit_amount"
+                    value={editFormData.credit_amount}
+                    onChange={handleEditFormChange}
+                    style={styles.input}
+                    placeholder="Enter credit amount"
+                  />
+                </div>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Credit Note</label>
+                  <input
+                    type="text"
+                    name="credit_note"
+                    value={editFormData.credit_note}
+                    onChange={handleEditFormChange}
+                    style={styles.input}
+                    placeholder="Enter credit note"
                   />
                 </div>
               </div>
@@ -789,6 +839,8 @@ const styles = {
     overflow: "hidden",
     boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
     border: "1px solid #e5e7eb",
+    overflowX: "auto",
+    overflowY: "visible",
   },
   table: {
     width: "100%",
