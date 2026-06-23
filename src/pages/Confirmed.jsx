@@ -32,6 +32,7 @@ const Confirmed = () => {
   const [search, setSearch] = useState("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+  const [travelDateSearch, setTravelDateSearch] = useState("");
   const [selectedLabelName, setSelectedLabelName] = useState("");
   const [selectedCreator, setSelectedCreator] = useState("");
   const [labelMenuOpen, setLabelMenuOpen] = useState(false);
@@ -97,10 +98,15 @@ const Confirmed = () => {
     const isAfterFrom = fromDate ? enquiryDate >= new Date(fromDate) : true;
     const isBeforeTo = toDate ? enquiryDate <= new Date(toDate) : true;
 
+    // Travel Date Filter - matches dd/mm/yyyy format when user searches
+    const matchesTravelDate = travelDateSearch
+      ? formatTravelDate(item.travel_date).includes(travelDateSearch)
+      : true;
+
     const matchesLabel = selectedLabelName ? getLabelEntries(item).some((label) => label.name === selectedLabelName) : true;
     const matchesCreator = selectedCreator ? (item.username || item.created_by) === selectedCreator : true;
 
-    return matchesSearch && isAfterFrom && isBeforeTo && matchesLabel && matchesCreator;
+    return matchesSearch && isAfterFrom && isBeforeTo && matchesTravelDate && matchesLabel && matchesCreator;
   });
 
   // Pagination logic
@@ -274,6 +280,20 @@ const Confirmed = () => {
               setCurrentPage(1);
             }}
             style={styles.dateInput}
+            onFocus={(e) => e.target.style.borderColor = "#059669"}
+            onBlur={(e) => e.target.style.borderColor = "#d1d5db"}
+          />
+
+          {/* Travel Date Search - separate filter */}
+          <input
+            type="text"
+            placeholder="Travel Date (dd/mm/yyyy)"
+            value={travelDateSearch}
+            onChange={(e) => {
+              setTravelDateSearch(e.target.value);
+              setCurrentPage(1);
+            }}
+            style={styles.input}
             onFocus={(e) => e.target.style.borderColor = "#059669"}
             onBlur={(e) => e.target.style.borderColor = "#d1d5db"}
           />
@@ -723,7 +743,7 @@ const styles = {
   },
   filterRow: {
     display: "grid",
-    gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr",
+    gridTemplateColumns: "2fr 1fr 1fr 1.2fr 1fr 1fr",
     gap: "14px",
     marginBottom: "22px",
   },

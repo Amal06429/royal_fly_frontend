@@ -167,9 +167,6 @@ const Visa = () => {
       <style>{`
         table td, table th {
           white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          max-width: 100px;
         }
         table th {
           font-size: 11px;
@@ -276,19 +273,19 @@ const Visa = () => {
             <table style={styles.table}>
               <thead>
                 <tr style={styles.headerRow}>
-                  <th style={styles.th}>Sl No</th>
-                  <th style={styles.th}>Fill No</th>
-                  <th style={styles.th}>Passport Number</th>
-                  <th style={styles.th}>Passport Detail</th>
-                  <th style={styles.th}>Contact No</th>
-                  <th style={styles.th}>Visa Number</th>
-                  <th style={styles.th}>Id Number</th>
-                  <th style={styles.th}>Visa Date</th>
-                  <th style={styles.th}>Mofa Number</th>
-                  <th style={styles.th}>Passport Post Date</th>
-                  <th style={styles.th}>Passport Return</th>
-                  <th style={styles.th}>Created By</th>
-                  <th style={styles.th}>Actions</th>
+                  <th style={{...styles.th, minWidth: '50px'}}>Sl No</th>
+                  <th style={{...styles.th, minWidth: '150px'}}>Fill No</th>
+                  <th style={{...styles.th, minWidth: '140px'}}>Passport Number</th>
+                  <th style={{...styles.th, minWidth: '160px'}}>Passport Detail</th>
+                  <th style={{...styles.th, minWidth: '120px'}}>Contact No</th>
+                  <th style={{...styles.th, minWidth: '130px'}}>Visa Number</th>
+                  <th style={{...styles.th, minWidth: '120px'}}>Id Number</th>
+                  <th style={{...styles.th, minWidth: '100px'}}>Visa Date</th>
+                  <th style={{...styles.th, minWidth: '130px'}}>Mofa Number</th>
+                  <th style={{...styles.th, minWidth: '130px'}}>Passport Post Date</th>
+                  <th style={{...styles.th, minWidth: '130px'}}>Passport Return</th>
+                  <th style={{...styles.th, minWidth: '100px'}}>Created By</th>
+                  <th style={{...styles.th, minWidth: '90px'}}>Actions</th>
                 </tr>
               </thead>
               <tbody>
