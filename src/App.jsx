@@ -15,6 +15,9 @@ import Home from "./Public/Home";
 import Enquire from "./Public/Enquire";
 import PublicLayout from "./Public/Publiclayout";
 
+// License
+import LicenseGate from "./components/LicenseGate";
+
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
@@ -37,36 +40,38 @@ const App = () => {
   if (!authChecked) return null;
 
   return (
-    <Routes>
-      {/* 🌍 PUBLIC */}
-      <Route element={<PublicLayout />}>
-        <Route path="/" element={<Home />} />
-        <Route path="/enquire/:id" element={<Enquire />} />
-      </Route>
+    <LicenseGate>
+      <Routes>
+        {/* 🌍 PUBLIC */}
+        <Route element={<PublicLayout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/enquire/:id" element={<Enquire />} />
+        </Route>
 
-      {/* 🔓 LOGIN */}
-      <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
+        {/* 🔓 LOGIN */}
+        <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
 
-      {/* 🔒 ADMIN */}
-      <Route
-        element={
-          isAuthenticated ? (
-            <Layout onLogout={handleLogout} />
-          ) : (
-            <Navigate to="/login" replace />
-          )
-        }
-      >
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/flights" element={<FlightManagement />} />
-        <Route path="/enquiries" element={<Enquiries />} />
-        <Route path="/confirmed" element={<Confirmed />} />
-        <Route path="/visa" element={<Visa />} />
-        <Route path="/users" element={<Users />} />
-      </Route>
+        {/* 🔒 ADMIN */}
+        <Route
+          element={
+            isAuthenticated ? (
+              <Layout onLogout={handleLogout} />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        >
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/flights" element={<FlightManagement />} />
+          <Route path="/enquiries" element={<Enquiries />} />
+          <Route path="/confirmed" element={<Confirmed />} />
+          <Route path="/visa" element={<Visa />} />
+          <Route path="/users" element={<Users />} />
+        </Route>
 
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </LicenseGate>
   );
 };
 
